@@ -37,17 +37,8 @@ public class ProcessChoco extends FraisAditionnel {
 
     
 
-    public void decisionProcessChoco(){
-        if (super.getQuantiteStock(Feve.F_MQ)>10){
-            this.fabriquerChocolat(Chocolat.C_MQ,Feve.F_MQ,10);
-            super.journal.ajouter("fabrication de 10 tonnes de chocolat de qualité moyenne");
-        }
-        
-    }
 
 
-    public void next(){
-        decisionProcessChoco();
-        super.next();
+ 
     }
-}
+

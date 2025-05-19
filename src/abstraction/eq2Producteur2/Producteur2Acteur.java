@@ -1,3 +1,4 @@
+//Equipe
 package abstraction.eq2Producteur2;
 
 import java.awt.Color;
@@ -17,6 +18,8 @@ public class Producteur2Acteur implements IActeur {
 	
 	protected HashMap<Feve,Double> prodParStep;
 	protected HashMap<Feve,Variable> stock;
+	protected HashMap<Feve,Variable> stockvar;
+	protected HashMap<Feve,Double> fevesSeches;
 	protected int cryptogramme;
 	protected Variable stockTotal;
 	private int numero = 0;
@@ -26,7 +29,8 @@ public class Producteur2Acteur implements IActeur {
 	public Producteur2Acteur() {
 
 		this.JournalBanque = new Journal("Journal Banque Eq2", this);
-		// A REMPLIR
+		this.stockvar = new HashMap<Feve,Variable>();
+		this.fevesSeches = new HashMap<Feve, Double>();
     }
 	
 	public void initialiser() {

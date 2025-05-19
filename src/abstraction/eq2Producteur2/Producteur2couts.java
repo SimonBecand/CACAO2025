@@ -1,4 +1,4 @@
-//Maxime Philippon a
+//Maxime Philippon
 package abstraction.eq2Producteur2;
 
 import java.util.HashMap;
@@ -11,18 +11,15 @@ import abstraction.eqXRomu.produits.Feve;
 public class Producteur2couts extends Producteur2stock {
 
     protected HashMap<Feve, Double> cout_unit_t;
-    protected HashMap<Feve, Double> prix;
     private Journal JournalCout;
     
     public Producteur2couts() {
         super();
         this.cout_unit_t = new HashMap<Feve, Double>();
-        this.prix = new HashMap<Feve, Double>();
         this.JournalCout = new Journal("Journal Cout Eq2",this);
 
         for (Feve f : Feve.values()) {
             this.cout_unit_t.put(f, 0.0);
-            this.prix.put(f,0.0);
         }
     }
 
@@ -33,7 +30,6 @@ public class Producteur2couts extends Producteur2stock {
     public void next() {
         super.next();
         calcul_cout_unit();
-        calcul_prix();
     }
 
     /*
@@ -79,15 +75,6 @@ public class Producteur2couts extends Producteur2stock {
         JournalCout.ajouter("Cout unitaire de production de chaque tonne de feve calculé"+cout_unit_t);
     }
 
-    /*
-     * Calcul des prix unitaires de chaque tonne de feve
-     */
-    public void calcul_prix() {
-        for (Feve f : Feve.values()) {
-            prix.put(f, cout_unit_t.get(f) * 1.2); //Fixe le prix telle que la marge soit de 20%
-        }
-        JournalCout.ajouter("Prix unitaires :"+prix);
-    }
 
     public List<Journal> getJournaux() {
         List<Journal> res = super.getJournaux();

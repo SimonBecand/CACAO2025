@@ -11,10 +11,11 @@ import abstraction.eqXRomu.general.Journal;
 import abstraction.eqXRomu.filiere.IActeur;
 
 public class Transformateur3Stock {
+    //private int dureePeremption = 6*2; //6 mois avant péremption (12 steps)
     private double stockTotal;
     private List<IProduit> listProduitSorted;
-    private HashMap<IProduit, Double> stockProduit; 
-    private HashMap<IProduit, Variable> dicoIndicateur;
+    private HashMap<IProduit, Double> stockProduit; //
+    private HashMap<IProduit, Variable> dicoIndicateur;//Assosciation indicateur et quantité produits
     private Journal journalStock;
     private IActeur monActeur;
     private String nomProduit;
@@ -40,6 +41,7 @@ public class Transformateur3Stock {
         for (IProduit prod : listProduit) {
 			stockProduit.put(prod, initial_value);
             dicoIndicateur.get(prod).setValeur(monActeur, initial_value);
+            this.stockTotal += initial_value;
 		}
 
         journalStock.ajouter("Initialisation du stock de "+this.nomProduit);
@@ -62,7 +64,7 @@ public class Transformateur3Stock {
         return this.stockTotal;
     }
 
-    public void addToStock(IProduit prod, double quantity){
+    public void addToStock(IProduit prod, double quantity){//int Etape
         if(quantity>0.0){
             //Si le produit n'existe pas on l'ajoute
             if(!stockProduit.containsKey(prod)){

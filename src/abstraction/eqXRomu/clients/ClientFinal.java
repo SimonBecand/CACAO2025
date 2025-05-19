@@ -192,9 +192,21 @@ public class ClientFinal implements IActeur, IAssermente, PropertyChangeListener
 			historiqueVentes.put(etape-24, ventesEtape);
 		}
 	}
-	private double getTotalAttractiviteChocolatsDeMarque() { // Serait a 100 sans les problemes d'arrondis/representation des double
+	private double getTotalAttractiviteChocolatsDeMarque() { 
 		double totalAttractiviteChocolats = 0.0;
+		boolean lissage=false;
 		for (ChocolatDeMarque choco : chocolatsDeMarquesProduits) {
+			if (attractiviteChocolat.get(choco)>1000.0) {
+				lissage=true;
+			}
+		}
+		for (ChocolatDeMarque choco : chocolatsDeMarquesProduits) {
+			if (lissage) {
+				attractiviteChocolat.put(choco, attractiviteChocolat.get(choco)/10.0);
+			}
+			if (attractiviteChocolat.get(choco)<1.0) {
+				attractiviteChocolat.put(choco, 1.0);
+			} 
 			totalAttractiviteChocolats+=attractiviteChocolat.get(choco);
 		}
 		return totalAttractiviteChocolats;
@@ -302,6 +314,8 @@ public class ClientFinal implements IActeur, IAssermente, PropertyChangeListener
 					totalVentes+=quantiteAchetee;
 					Filiere.LA_FILIERE.getBanque().virer(this, cryptogramme, dist, quantiteAchetee*dist.prix(choco));
 					dist.vendre(this, choco, quantiteAchetee, quantiteAchetee*pri, this.cryptos.get(dist));
+
+					Filiere.LA_FILIERE.ajouterEchange(this, this.cryptos.get(this), dist, choco, -quantiteAchetee, "CLIENTS");
 				} 
 				if (quantiteDesiree>enVente) {
 					dist.notificationRayonVide(choco, this.cryptos.get(dist));

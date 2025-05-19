@@ -271,7 +271,10 @@ public class SuperviseurVentesContratCadre implements IActeur, IAssermente {
 				return null;// arret des negociations
 			}
 			if (!contrePropositionV.echeancierAcceptable()) {
-				throw new SecurityException(" appel de contrePropositionDuVendeur(...) sur "+vendeur.getNom()+" retourne un echeancier qui ne respecte pas les conditions du document des distributeurs : "+contrePropositionV);
+	//			throw new SecurityException(" appel de contrePropositionDuVendeur(...) sur "+vendeur.getNom()+" retourne un echeancier qui ne respecte pas les conditions du document des distributeurs : "+contrePropositionV);
+				System.err.println(" appel de contrePropositionDuVendeur(...) sur "+vendeur.getNom()+" retourne un echeancier qui ne respecte pas les conditions du document des distributeurs : "+contrePropositionV+"\nmise en faillite du vendeur");
+				Filiere.LA_FILIERE.getBanque().faireFaillite(vendeur, this, cryptos.get(this));
+				return null;
 			}
 			contrat.ajouterEcheancier(contrePropositionV);
 			if (!contrat.accordSurEcheancier()) {
@@ -283,7 +286,10 @@ public class SuperviseurVentesContratCadre implements IActeur, IAssermente {
 					return null;// arret des negociations
 				}
 				if (!contrePropositionA.echeancierAcceptable()) {
-					throw new SecurityException(" appel de contrePropositionDeLAcheteur(...) sur "+acheteur.getNom()+" retourne un echeancier qui ne respecte pas les conditions du document des distributeurs : "+contrePropositionA);
+					System.out.println(" appel de contrePropositionDeLAcheteur(...) sur "+acheteur.getNom()+" retourne un echeancier qui ne respecte pas les conditions du document des distributeurs : "+contrePropositionA);
+					System.out.println(" mise en faillite de "+acheteur.getNom());
+					Filiere.LA_FILIERE.getBanque().faireFaillite(acheteur, this, cryptos.get(this));
+					//throw new SecurityException(" appel de contrePropositionDeLAcheteur(...) sur "+acheteur.getNom()+" retourne un echeancier qui ne respecte pas les conditions du document des distributeurs : "+contrePropositionA);
 				}				
 				contrat.ajouterEcheancier(contrePropositionA);
 				if (!contrat.accordSurEcheancier()) {
@@ -447,6 +453,8 @@ public class SuperviseurVentesContratCadre implements IActeur, IAssermente {
 					}
 					IAcheteurContratCadre acheteur = cc.getAcheteur();
 					acheteur.receptionner(cc.getProduit(),lotLivre, new ExemplaireContratCadre(cc));
+					Filiere.LA_FILIERE.ajouterEchange(this, this.cryptos.get(this), acheteur, cc.getProduit(), lotLivre, "cc");
+					Filiere.LA_FILIERE.ajouterEchange(this, this.cryptos.get(this), vendeur, cc.getProduit(), -lotLivre, "cc");
 					cc.livrer(lotLivre);
 				} else if (lotLivre<0.0) {
 					System.err.println(" La methode livrer() du vendeur "+vendeur.getNom()+" retourne un negatif --> mise en faillite");

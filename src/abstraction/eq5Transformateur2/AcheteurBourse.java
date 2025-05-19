@@ -13,7 +13,7 @@ public class AcheteurBourse extends ContratCadreAcheteur implements IAcheteurBou
 
    
     public double demande(Feve f, double cours) {
-        if (f == Feve.F_HQ_BE || f == Feve.F_HQ_E || f == Feve.F_MQ_E || f == Feve.F_MQ){
+        if (f == Feve.F_HQ_BE || f == Feve.F_HQ_E || f == Feve.F_MQ_E || f == Feve.F_MQ) {
             
             double enStock = super.getQuantiteStock(f);
             double quantiteVoulueProduction= super.getProductionTotale()*super.getProportion(f)/10000; // en tonnes
@@ -21,6 +21,7 @@ public class AcheteurBourse extends ContratCadreAcheteur implements IAcheteurBou
             double difference= quantiteVoulueProduction-enStock;
             this.journal.ajouter("enStock: " + enStock + " quantiteVoulueProduction: " + quantiteVoulueProduction + " difference: " + difference);
             double solde = Filiere.LA_FILIERE.getBanque().getSolde(this, super.cryptogramme);
+
             double montantMax = solde / cours;
             this.journal.ajouter("solde: " + solde + " montantMax: " + montantMax);
 

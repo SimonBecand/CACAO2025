@@ -9,7 +9,7 @@ import abstraction.eqXRomu.encheres.IVendeurAuxEncheres;
 import abstraction.eqXRomu.encheres.SuperviseurVentesAuxEncheres;
 import abstraction.eqXRomu.filiere.Filiere;
 import abstraction.eqXRomu.produits.Chocolat;
-import abstraction.eqXRomu.produits.ChocolatDeMarque;
+import abstraction.eqXRomu.produits.ChocolatDeMarque; 
 
 /**
  * @author YAOU Reda
@@ -30,7 +30,7 @@ public class Transformateur1VendeurEncheres extends Transformateur1VendeurAppelD
     public Transformateur1VendeurEncheres() {	
 		NB_INSTANCES++;
 		this.numero=NB_INSTANCES;
-		this.choco = Chocolat.C_BQ;
+		this.choco = Chocolat.C_MQ;
 		this.marque = "LimDt";
 		
 	}
@@ -43,7 +43,7 @@ public class Transformateur1VendeurEncheres extends Transformateur1VendeurAppelD
 
 		super.initialiser();
 
-		this.prixMin = prixTChocoBase.get(choco)*1.8;
+		this.prixMin = prixTChocoBase.get(choco)*1.2;
 
 		this.superviseur = (SuperviseurVentesAuxEncheres)(Filiere.LA_FILIERE.getActeur("Sup.Encheres"));
 		journalTransactions.ajouter(Romu.COLOR_LLGRAY, Color.darkGray,  "E: PrixMin== " + this.prixMin);
@@ -54,7 +54,7 @@ public class Transformateur1VendeurEncheres extends Transformateur1VendeurAppelD
 
 
 
-	protected ChocolatDeMarque getChocolatDeMarque() {
+	protected ChocolatDeMarque getChocolatDeMarque(Chocolat choco) {
 		return new ChocolatDeMarque(choco,marque,  (int)(Filiere.LA_FILIERE.getParametre("pourcentage min cacao "+choco.getGamme()).getValeur()));
 	}
 
@@ -67,15 +67,14 @@ public class Transformateur1VendeurEncheres extends Transformateur1VendeurAppelD
 		super.next();
 
 		if (Filiere.LA_FILIERE.getEtape()>=1) {
-			if (this.getQuantiteEnStock(getChocolatDeMarque(), this.cryptogramme)>200) {
+			if (this.getQuantiteEnStock(getChocolatDeMarque(choco), this.cryptogramme)>200) {
 				//On veut vendre 10% de notre stock de ce chocolat de marque
-				Enchere retenue = superviseur.vendreAuxEncheres(this, cryptogramme, getChocolatDeMarque(), this.getQuantiteEnStock(getChocolatDeMarque(), this.cryptogramme)*0.1);
+				Enchere retenue = superviseur.vendreAuxEncheres(this, cryptogramme, getChocolatDeMarque(choco), this.getQuantiteEnStock(getChocolatDeMarque(choco), this.cryptogramme)*0.1);
 				if (retenue!=null) {
 
-					this.stocksMarqueVar.get(getChocolatDeMarque()).retirer(this, retenue.getMiseAuxEncheres().getQuantiteT());
-					
 
-					
+					this.retirerDuStock(retenue.getProduit(),  retenue.getMiseAuxEncheres().getQuantiteT(), this.cryptogramme);
+						
 					journalTransactions.ajouter(Romu.COLOR_LLGRAY, Color.darkGray, "E: vente de "+retenue.getMiseAuxEncheres().getQuantiteT()+" T à "+retenue.getAcheteur().getNom());
 					this.journalTransactions.ajouter("\n");
 				} else {

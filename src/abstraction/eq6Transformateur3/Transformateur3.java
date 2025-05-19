@@ -37,6 +37,8 @@ public class Transformateur3 extends Transformateur3AO{
 		String suff = "k€";
 		super.jdb.ajouter("Payement Coût stockage : "+Math.round(super.coutStockage*stockTotal/div)+suff);
 
+		//Estimation coût par fèves
+
 		super.stockFeves.display();
 		super.stockChoco.display();
 		super.jdb.ajouter("");//Saut de ligne de fin de next
@@ -45,11 +47,13 @@ public class Transformateur3 extends Transformateur3AO{
 	public List<Journal> getJournaux() {
 		ArrayList<Journal> res = new ArrayList<Journal>();
 		res.add(super.jdb);
+		res.add(super.journalProduction);
 		res.add(super.journalStock);
 		res.add(super.journalTransac);
 		res.add(super.journalCC);
 		res.add(super.journalBourse);
 		res.add(super.journalAO);
+		res.add(super.journalStrat);
 		return res;
 	}
 

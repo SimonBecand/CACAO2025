@@ -16,5 +16,14 @@ public abstract class Employés {
     public double getCoutParStep() {
         return mainOeuvre * salaire;
     }
+    public double getProductivité() {
+        return productivité;
+    }
+    public int getMainOeuvre() {
+        return mainOeuvre;
+    }
+    public double getSalaire() {
+        return salaire;
+    }
     
 }

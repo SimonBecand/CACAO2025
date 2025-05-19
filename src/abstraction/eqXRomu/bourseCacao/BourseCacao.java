@@ -271,6 +271,8 @@ public class BourseCacao implements IActeur, IAssermente {
 						// La quantite vendue est au prorata de la quantite mis en vente
 						double quantite = Math.min(offres.get(v),(totalDemandes*offres.get(v))/totalOffres); 
 						double livre = v.notificationVente(f, quantite,cours);
+						Filiere.LA_FILIERE.ajouterEchange(this, this.cryptos.get(this), (IActeur)v, f, -quantite, "BOURSE");
+
 						totalLivre+=livre;
 						obtenusV.get(f).get(v).ajouter(etape, quantite);
 						if (livre+EPSILON>=quantite) {
@@ -290,6 +292,7 @@ public class BourseCacao implements IActeur, IAssermente {
 							boolean virementOk = banque.virer((IActeur)a, cryptos.get((IActeur)a), this,cours*quantite);
 							if (virementOk) {
 								a.notificationAchat(f, quantite, cours);
+								Filiere.LA_FILIERE.ajouterEchange(this, this.cryptos.get(this), (IActeur)a, f, quantite, "BOURSE");
 								journal.get(f).ajouter(Journal.texteColore((IActeur)a, ((IActeur)a).getNom()+" obtient "+Journal.doubleSur(quantite,2)+" et paye "+Journal.doubleSur(cours*quantite, 2)));
 							} else { // Normalement la transaction peut avoir lieu vu qu'on a verifie au prealable la capacite de l'acheteur a payer
 								a.notificationBlackList(DUREE_BLACKLIST);
@@ -308,6 +311,8 @@ public class BourseCacao implements IActeur, IAssermente {
 						journal.get(f).ajouter("vendeur "+v+" vend tout ="+quantite);
 						obtenusV.get(f).get(v).ajouter(etape, quantite);
 						double livre = v.notificationVente(f, quantite,cours);
+						Filiere.LA_FILIERE.ajouterEchange(this, this.cryptos.get(this), (IActeur)v, f, -quantite, "BOURSE");
+
 						if (livre+EPSILON>=quantite) {
 							banque.virer(this, crypto, (IActeur)v,cours*quantite);
 							totalLivre+=livre;
@@ -327,6 +332,8 @@ public class BourseCacao implements IActeur, IAssermente {
 								boolean virementOk = banque.virer((IActeur)a, cryptos.get((IActeur)a), this,cours*quantite);
 								if (virementOk) { // normalement c'est le cas vu qu'on a verifie auparavant
 									a.notificationAchat(f, quantite, cours);
+									Filiere.LA_FILIERE.ajouterEchange(this, this.cryptos.get(this), (IActeur)a, f, quantite, "BOURSE");
+
 									journal.get(f).ajouter(Journal.texteColore((IActeur)a, ((IActeur)a).getNom()+" obtient "+Journal.doubleSur(quantite,2)+" et paye "+Journal.doubleSur(cours*quantite, 2)));
 								} else {
 									journal.get(f).ajouter(Journal.texteColore((IActeur)a, "acheteur "+a+" blackliste : ne parvient pas a payer ce qu'il a demande en bourse"));

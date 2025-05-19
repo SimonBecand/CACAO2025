@@ -64,7 +64,7 @@ public class Producteur2recolte extends Producteur2Acteur {
                     break;
                 case F_BQ_E:
                     Prod_BQ_E += p.prodPlantation();
-                    cout_BQ_E += p.getcout();
+                    cout_BQ_E += p.getcout_amorti();
                     break;
                 case F_MQ:
                     Prod_MQ += p.prodPlantation();
@@ -72,15 +72,15 @@ public class Producteur2recolte extends Producteur2Acteur {
                     break;
                 case F_MQ_E:
                     Prod_MQ_E += p.prodPlantation();
-                    cout_MQ_E += p.getcout();
+                    cout_MQ_E += p.getcout_amorti();
                     break;
                 case F_HQ_E:
                     Prod_HQ_E += p.prodPlantation();
-                    cout_HQ_E += p.getcout();
+                    cout_HQ_E += p.getcout_amorti();
                     break;
                 case F_HQ_BE:
                     Prod_HQ_BE += p.prodPlantation();
-                    cout_HQ_BE += p.getcout();
+                    cout_HQ_BE += p.getcout_amorti();
                     break;
                 default:
                     throw new IllegalArgumentException("Type de fève non reconnu !");
@@ -104,18 +104,32 @@ public class Producteur2recolte extends Producteur2Acteur {
     
     public void cout_plantations() {
         double cout = 0;
-        for (Feve f : Feve.values()) {
-            cout += cout_recolte.get(f);
+        for (Plantation p : plantations) {
+            cout += p.getcout();
         }
         Filiere.LA_FILIERE.getBanque().payerCout(this, cryptogramme, "Cout lié aux plantations (main d'oeuvre, achat, replantation) ", cout);
         JournalBanque.ajouter(Filiere.LA_FILIERE.getEtape()+" : Cout total lié aux plantations : "+cout);
     }
 
+    public boolean seuil_replante(Feve f) {
+        double stock_f = stockvar.get(f).getValeur();
+        double prod_f = fevesSeches.get(f);
+
+        if (stock_f <= 2 * prod_f) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     public void action_replante() {
         for (Plantation p : plantations) {
-            if (p.estMorte()) {
+            if (p.estMorte() && seuil_replante(p.getTypeFeve())) {
                 p.Replante();
                 Journalterrains.ajouter(Filiere.LA_FILIERE.getEtape()+" : Replantation de "+p.getParcelles()+" parcelles de "+p.getTypeFeve());
+            }
+            else if (p.estMorte() && !seuil_replante(p.getTypeFeve())) {
+                //Journalterrains.ajouter(Filiere.LA_FILIERE.getEtape()+" : Pas de replantation de "+p.getTypeFeve()+" car le stock est trop important");
             }
             else{}
         }

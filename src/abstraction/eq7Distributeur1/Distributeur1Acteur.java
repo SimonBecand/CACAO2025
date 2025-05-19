@@ -2,19 +2,39 @@ package abstraction.eq7Distributeur1;
 
 import java.awt.Color;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import abstraction.eqXRomu.filiere.Filiere;
 import abstraction.eqXRomu.filiere.IActeur;
 import abstraction.eqXRomu.general.Journal;
 import abstraction.eqXRomu.general.Variable;
+import abstraction.eqXRomu.general.VariablePrivee;
+import abstraction.eqXRomu.produits.Chocolat;
+import abstraction.eqXRomu.produits.ChocolatDeMarque;
 import abstraction.eqXRomu.produits.IProduit;
 
 public class Distributeur1Acteur implements IActeur {
 	
 	protected int cryptogramme;
+	protected Map<ChocolatDeMarque, Variable> stocksChocolats;
+    protected List<ChocolatDeMarque> chocolats;
+
+	protected Variable stock_C_BQ;
+	protected Variable stock_C_BQ_E;
+	protected Variable stock_C_MQ;
+	protected Variable stock_C_MQ_E;
+	protected Variable stock_C_HQ_E;
+	protected Variable stock_C_HQ_BE;
 
 	public Distributeur1Acteur() {
+		this.stock_C_BQ=new VariablePrivee("EQ7-D1 Stock C_BQ", "<html>Quantite totale de C_BQ en stock</html>",this, 0.0, 1000000.0, 0.0);
+		this.stock_C_BQ_E=new VariablePrivee("EQ7-D1 Stock C_BQ_E", "<html>Quantite totale de C_BQ_E en stock</html>",this, 0.0, 1000000.0, 0.0);
+		this.stock_C_MQ=new VariablePrivee("EQ7-D1 Stock C_MQ", "<html>Quantite totale de C_MQ en stock</html>",this, 0.0, 1000000.0, 0.0);
+		this.stock_C_MQ_E=new VariablePrivee("EQ7-D1 Stock C_MQ_E", "<html>Quantite totale de C_MQ_E en stock</html>",this, 0.0, 1000000.0, 0.0);
+		this.stock_C_HQ_E=new VariablePrivee("EQ7-D1 Stock C_HQ_E", "<html>Quantite totale de C_HQ_E en stock</html>",this, 0.0, 1000000.0, 0.0);
+		this.stock_C_HQ_BE=new VariablePrivee("EQ7-D1 Stock C_HQ_BE", "<html>Quantite totale de C_HQ_BE en stock</html>",this, 0.0, 1000000.0, 0.0);
 	}
 	
 	public void initialiser() {
@@ -31,8 +51,29 @@ public class Distributeur1Acteur implements IActeur {
 	////////////////////////////////////////////////////////
 	//         En lien avec l'interface graphique         //
 	////////////////////////////////////////////////////////
-
+	@Override
 	public void next() {
+		//par Ethan
+		for (int i = 0; i < this.chocolats.size(); i++) {
+			if (stocksChocolats.get(chocolats.get(i)).getNom().contains("BQ_E")) {
+				this.stock_C_BQ_E.ajouter(this, stocksChocolats.get(chocolats.get(i)).getValeur(), cryptogramme);
+			}
+			if (stocksChocolats.get(chocolats.get(i)).getNom().contains("BQ") && (!stocksChocolats.get(chocolats.get(i)).getNom().contains("BQ_E"))) {
+				this.stock_C_BQ.ajouter(this, stocksChocolats.get(chocolats.get(i)).getValeur(), cryptogramme);
+			}
+			if (stocksChocolats.get(chocolats.get(i)).getNom().contains("MQ_E")) {
+				this.stock_C_MQ_E.ajouter(this, stocksChocolats.get(chocolats.get(i)).getValeur(), cryptogramme);
+			}
+			if (stocksChocolats.get(chocolats.get(i)).getNom().contains("MQ") && (!stocksChocolats.get(chocolats.get(i)).getNom().contains("MQ_E"))) {
+				this.stock_C_MQ.ajouter(this, stocksChocolats.get(chocolats.get(i)).getValeur(), cryptogramme);
+			}
+			if (stocksChocolats.get(chocolats.get(i)).getNom().contains("HQ_E")) {
+				this.stock_C_HQ_E.ajouter(this, stocksChocolats.get(chocolats.get(i)).getValeur(), cryptogramme);
+			}
+			if (stocksChocolats.get(chocolats.get(i)).getNom().contains("HQ_BE")) {
+				this.stock_C_HQ_BE.ajouter(this, stocksChocolats.get(chocolats.get(i)).getValeur(), cryptogramme);
+			}
+		}
 	}
 
 	public Color getColor() {// NE PAS MODIFIER
@@ -46,12 +87,18 @@ public class Distributeur1Acteur implements IActeur {
 	// Renvoie les indicateurs
 	public List<Variable> getIndicateurs() {
 		List<Variable> res = new ArrayList<Variable>();
+		res.add(this.stock_C_BQ);
+		res.add(this.stock_C_BQ_E);
+		res.add(this.stock_C_MQ);
+		res.add(this.stock_C_MQ_E);
+		res.add(this.stock_C_HQ_E);
+		res.add(this.stock_C_HQ_BE);
 		return res;
 	}
 
 	// Renvoie les parametres
 	public List<Variable> getParametres() {
-		List<Variable> res=new ArrayList<Variable>();
+		List<Variable> res = new ArrayList<Variable>();
 		return res;
 	}
 

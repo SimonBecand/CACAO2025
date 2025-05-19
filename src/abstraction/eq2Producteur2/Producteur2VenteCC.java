@@ -1,3 +1,4 @@
+//BRUN Thomas
 package abstraction.eq2Producteur2;
 
 import abstraction.eqXRomu.bourseCacao.BourseCacao;
@@ -15,11 +16,12 @@ import abstraction.eqXRomu.produits.Gamme;
 import abstraction.eqXRomu.produits.IProduit;
 
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.LinkedList;
 import java.awt.Color;
 
 
-//BRUN Thomas
+
 public class Producteur2VenteCC extends Producteur2couts implements IVendeurBourse, IVendeurContratCadre{
 	
     private SuperviseurVentesContratCadre supCC;
@@ -27,7 +29,7 @@ public class Producteur2VenteCC extends Producteur2couts implements IVendeurBour
 	private List<ExemplaireContratCadre> contratsTermines;
 	private Journal JournalEQ2CC;
    
-		private int PRIX_DEFAUT = 5000; // Default price initialized to 3500 (example value)
+		private int PRIX_DEFAUT = 5000; // Default price initialized to 5000 (example value)
 	   
 		public Producteur2VenteCC() {
         super();
@@ -55,7 +57,8 @@ public class Producteur2VenteCC extends Producteur2couts implements IVendeurBour
 			if (stockvar.get(f).getValeur()-restantDu(f)>1200) { // au moins 100 tonnes par step pendant 6 mois
 				this.JournalEQ2CC.ajouter("   "+f+" suffisamment en stock pour passer un CC");
 				double parStep = Math.max(100, (stockvar.get(f).getValeur()-restantDu(f))/24); // au moins 100, et pas plus que la moitie de nos possibilites divisees par 2
-				Echeancier e = new Echeancier(Filiere.LA_FILIERE.getEtape()+1, 12, parStep);
+				// Amélioration possible mais il faut définir une variable aléatoire gobale pour bien identifier l'échéancier Echeancier e = new Echeancier(Filiere.LA_FILIERE.getEtape()+1, ThreadLocalRandom.current().nextInt(12, 25), parStep); //CC d'une durée aléatoire entre 12 et 24 steps
+				Echeancier e = new Echeancier(Filiere.LA_FILIERE.getEtape()+1, 12, parStep); //CC d'une durée aléatoire de 12 steps
 				List<IAcheteurContratCadre> acheteurs = supCC.getAcheteurs(f);
 				if (acheteurs.size()>0) {
 					IAcheteurContratCadre acheteur = acheteurs.get(Filiere.random.nextInt(acheteurs.size()));
@@ -68,8 +71,10 @@ public class Producteur2VenteCC extends Producteur2couts implements IVendeurBour
 						JournalEQ2CC.ajouter(Color.GREEN, acheteur.getColor(), "   contrat signe");
 					}
 				} else {
-					JournalEQ2CC.ajouter("   pas d'acheteur");
-				}
+					JournalEQ2CC.ajouter("pas d'acheteur");
+				}}
+			else {
+				JournalEQ2CC.ajouter(Color.RED, Color.white,"   Pas assez de stock de " +f+ " pour passer un CC");
 			}
 		}
 		// On archive les contrats termines
@@ -86,14 +91,15 @@ public class Producteur2VenteCC extends Producteur2couts implements IVendeurBour
 		for (ExemplaireContratCadre cc: this.contratsEnCours) {
 			this.JournalEQ2CC.ajouter(cc.toString());
 		}
-		or (Feve f : stock.keySet()) { // pas forcement equitable : on avise si on lance un contrat cadre pour tout type de feve
+		for (Feve f : stock.keySet()) { // pas forcement equitable : on avise si on lance un contrat cadre pour tout type de feve
 			this.JournalEQ2CC.ajouter("Feve "+f+" en stock="+stockvar.get(f).getValeur()+" restant du="+restantDu(f));
-		}*/
+		}
 		this.JournalEQ2CC.ajouter("=================================");
+		*/
 	}
 
 
-    public double restantDu(Feve f) {
+    public double restantDu(Feve f) { //Calcule le reste à livrer pour une fève donnée
 		double res=0;
 		//JournalEQ2CC.ajouter("RESTANT DU "+f+" ----");
 		for (ExemplaireContratCadre c : this.contratsEnCours) {
@@ -110,12 +116,12 @@ public class Producteur2VenteCC extends Producteur2couts implements IVendeurBour
 		List<Double> lesPrix = new LinkedList<Double>();
 		for (ExemplaireContratCadre c : this.contratsEnCours) {
 			if (c.getProduit().equals(f)) {
-				lesPrix.add(c.getPrix());
+				lesPrix.add(c.getPrix()); // la variable lesPrix contient le prix de la fève du contrat en cours
 			}
 		}
 		for (ExemplaireContratCadre c : this.contratsTermines) {
 			if (c.getProduit().equals(f)) {
-				lesPrix.add(c.getPrix());
+				lesPrix.add(c.getPrix()); // la variable lesPrix contient le pri de la fève du contrat terminé
 			}
 		}
 		if (lesPrix.size()>0) {
@@ -123,7 +129,7 @@ public class Producteur2VenteCC extends Producteur2couts implements IVendeurBour
 			for (Double d : lesPrix) {
 				somme+=d;
 			}
-			res=somme/lesPrix.size();
+			res=somme/lesPrix.size(); //effectue la moyenne du prix de la fève sur les contrats en cours et terminés
 		}
 		return res;
 	}
@@ -142,11 +148,11 @@ public class Producteur2VenteCC extends Producteur2couts implements IVendeurBour
 
     
     public Echeancier contrePropositionDuVendeur(ExemplaireContratCadre contrat) {
-		JournalEQ2CC.ajouter("      contreProposition("+contrat.getProduit()+" avec echeancier "+contrat.getEcheancier());
+		JournalEQ2CC.ajouter(" On effectue une contreProposition("+contrat.getProduit()+" avec echeancier "+contrat.getEcheancier());
 		Echeancier ec = contrat.getEcheancier();
 		IProduit produit = contrat.getProduit();
 		Echeancier res = ec;
-		//JournalEQ2CC.ajouter("Echeancier contrat #"+contrat.getNumero()+" volume total="+ec.getQuantiteTotale()+" stock="+stockvar.get((Feve)produit).getValeur()+" restantdu="+restantDu((Feve)produit));
+		JournalEQ2CC.ajouter("Echeancier contrat #"+contrat.getNumero()+" volume total="+ec.getQuantiteTotale()+" stock="+stockvar.get((Feve)produit).getValeur()+" restantdu="+restantDu((Feve)produit));
 		boolean acceptable = produit.getType().equals("Feve")
 				&& ec.getQuantiteTotale()>=1200  // au moins 100 tonnes par step pendant 6 mois
 				&& ec.getStepFin()-ec.getStepDebut()>=11   // duree totale d'au moins 12 etapes
@@ -164,54 +170,60 @@ public class Producteur2VenteCC extends Producteur2couts implements IVendeurBour
 						return null;
 					}
 					if (ec.getQuantiteTotale()<=stockvar.get((Feve)produit).getValeur()-restantDu((Feve)produit)) {
-						JournalEQ2CC.ajouter("      je retourne "+new Echeancier(Filiere.LA_FILIERE.getEtape()+1, 12,  (int)(ec.getQuantiteTotale()/12)));
+						JournalEQ2CC.ajouter(" On propose "+new Echeancier(Filiere.LA_FILIERE.getEtape()+1, 12,  (int)(ec.getQuantiteTotale()/12)));
 						return new Echeancier(Filiere.LA_FILIERE.getEtape()+1, 12,  (int)(ec.getQuantiteTotale()/12));
 					} else {
-						JournalEQ2CC.ajouter("      je retourne "+new Echeancier(Filiere.LA_FILIERE.getEtape()+1, 12,  (int)(((stockvar.get((Feve)produit).getValeur()-restantDu((Feve)produit))/12))));
+						JournalEQ2CC.ajouter(" On propose "+new Echeancier(Filiere.LA_FILIERE.getEtape()+1, 12,  (int)(((stockvar.get((Feve)produit).getValeur()-restantDu((Feve)produit))/12))));
 						res = new Echeancier(Filiere.LA_FILIERE.getEtape()+1, 12,  (int)(((stockvar.get((Feve)produit).getValeur()-restantDu((Feve)produit))/12)));
 						return res.getQuantiteTotale()>=1200 ? res : null;
 					}
 				}
-				JournalEQ2CC.ajouter("      j'accepte l'echeancier");
+				JournalEQ2CC.ajouter(" On accepte l'echeancier");
 				return res;
 	}
+
 	public double propositionPrix(ExemplaireContratCadre contrat) {
 		if (!contrat.getProduit().getType().equals("Feve")) {
 			return 0; // ne peut pas etre le cas normalement 
 		}
 		BourseCacao bourse = (BourseCacao)(Filiere.LA_FILIERE.getActeur("BourseCacao"));
 		double cours = ((Feve)(contrat.getProduit())).isEquitable() ? 0.0 : bourse.getCours((Feve)contrat.getProduit()).getValeur();
-		double prixCC = prix.get((Feve) contrat.getProduit());
+		double prixCC = cout_unit_t.get(contrat.getProduit());
 		if (prixCC==0.0) {
 			PRIX_DEFAUT=(int)(PRIX_DEFAUT*0.98); // on enleve 2% tant qu'on n'a pas passe un contrat
 		}
-		double res = prixCC>cours ? prixCC*1.25 : (cours<PRIX_DEFAUT ? PRIX_DEFAUT : (int)(cours*1.5));
-		JournalEQ2CC.ajouter("      propositionPrix en retour est "+res);
+		JournalEQ2CC.ajouter("Le cours de la feve est de "+cours);
+		double res = prixCC>cours ? prixCC*1.2 : (int)(cours*1.5);
+		JournalEQ2CC.ajouter("La PropositionPrix de la première négociation est "+res);
 		return res;
 	}
 
 	public double contrePropositionPrixVendeur(ExemplaireContratCadre contrat) {
+		JournalEQ2CC.ajouter("      contreProposition a partir de : "+contrat.getPrix());
 		if (!contrat.getProduit().getType().equals("Feve")) {
 			return 0; // ne peut pas etre le cas normalement 
 		}
 		List<Double> prix = contrat.getListePrix();
-		if (prix.get(prix.size()-1)>=0.995*prix.get(0)) {
-			JournalEQ2CC.ajouter("      contrePropose le prix demande : "+contrat.getPrix());
+		if (prix.get(prix.size()-1)>=0.995*prix.get(0))// Vérifie si le dernier prix de la liste est supérieur ou égal à 99,5 % du premier prix
+															// Cela permet de s'assurer que la variation du prix reste faible (moins de 0,5 % de baisse) 
+															{
+			JournalEQ2CC.ajouter("2      contrePropose le prix demande : "+contrat.getPrix());
 			return contrat.getPrix();
 		} else {
-			int percent = (int)(100* Math.pow((contrat.getPrix()/prix.get(0)), prix.size()));
+			int percent = (int)(100* Math.pow((contrat.getPrix()/prix.get(0)), prix.size()/2));
 			int alea = Filiere.random.nextInt(100);
+			JournalEQ2CC.ajouter(" le pourcentage de négo du contrat: "+percent);
 			if (alea< percent) { // d'autant moins de chance d'accepter que le prix est loin de ce qu'on proposait
-				if (Filiere.random.nextInt(100)<20) { // 1 fois sur 5 on accepte
-					JournalEQ2CC.ajouter("      contrePropose le prix demande : "+contrat.getPrix());
+				if (Filiere.random.nextInt(100)<5) { // 1 fois sur 20 on accepte
+					JournalEQ2CC.ajouter("3      contrePropose le prix demande : "+contrat.getPrix());
 					return contrat.getPrix();
 				} else {
 					double res = (prix.get(prix.size()-2)+contrat.getPrix())/2.0; // la mmoyenne des deux derniers prix
-					JournalEQ2CC.ajouter("      contreproposition à ("+contrat.getPrix()+") contre "+res);
+					JournalEQ2CC.ajouter("4      contreproposition à ("+contrat.getPrix()+") contre "+res);
 					return res;
 				}
 			} else {
-				JournalEQ2CC.ajouter("      contreproposition("+contrat.getPrix()+") contre "+prix.get(0)*1.05);
+				JournalEQ2CC.ajouter("5      contreproposition("+contrat.getPrix()+") contre "+prix.get(0)*1.05);
 				return prix.get(0)*1.05;
 			}
 		}

@@ -44,38 +44,17 @@ public class Distributeur1AcheteurAppelOffre extends Distributeur1AcheteurEncher
 
 	}
 
-	public int getInt(Chocolat product){
-        int idProduct = 0;
-        switch(product.getGamme()){
-            case BQ : idProduct=0;
-            case MQ : idProduct=2;
-            case HQ : idProduct=4;
-        }
-        if (product.isBio()){
-            idProduct++;
-        }
-        if (product.isEquitable()){
-            idProduct++;
-        }
-		if(idProduct == 5)
-		{
-			return 4;
-		}
-		if(idProduct == 6)
-		{
-			return 5;
-		}
-        return(idProduct);
-    }
-	
+	@Override
 	public OffreVente choisirOV(List<OffreVente> propositions){
 		int indice = -1;
 		double volume = propositions.get(0).getQuantiteT();
 		IProduit product = propositions.get(0).getProduit();
 		if (product instanceof ChocolatDeMarque) {
         	ChocolatDeMarque chocolat = (ChocolatDeMarque) product;
-			int idProduct = getInt(chocolat.getChocolat());
-			double price = 1.03*this.priceProduct.get(idProduct)*volume ;
+			//System.err.println("Chocolat : " + chocolat.toString());
+			
+			int idProduct = cdmToInt(chocolat);
+			double price = 1.5*this.priceProduct.get(idProduct) ;
 			for (int i=0; i<propositions.size(); i++){
 				double priceProposed = propositions.get(i).getPrixT();
 				if (priceProposed<price){
@@ -83,54 +62,70 @@ public class Distributeur1AcheteurAppelOffre extends Distributeur1AcheteurEncher
 					price = priceProposed;
 					}
 				}
-				this.priceProduct.set(idProduct,price/volume);
-			}
+				this.priceProduct.set(idProduct,price);
+			
 		
 		if (indice == -1){
 			return(null);
 		}
+		this.getStock((ChocolatDeMarque) propositions.get(indice).getProduit()).ajouter(this, propositions.get(indice).getQuantiteT());
+		}
+		// journal Alexiho :
+
+		String str_journal_AO = "";
+		str_journal_AO = "Achat en appel d'offre de " + this.stocksChocolats.get((ChocolatDeMarque) propositions.get(indice).getProduit()).getNom()+ " = " + propositions.get(indice).getQuantiteT() + " tonne(s);";
+		str_journal_AO = str_journal_AO.replace("EQ7StockC_", " ");
+		journalAO.ajouter(str_journal_AO);
+
 		return(propositions.get(indice));
 		}
 	
+	
+	
 
-
+	@Override
 	public void initialiser(){
 
 	}
 
+	@Override
 	public String getDescription(){
 		return("Appelleur d'offre de l'equipe 7");
 	}
 
 	public void next_ao(){
 		SuperviseurVentesAO superviseur = (SuperviseurVentesAO)(Filiere.LA_FILIERE.getActeur("Sup.AO"));
-		superviseur.acheterParAO(this,this.cryptogramme, Chocolat.C_BQ , this.requiredQuantities.get(0));
-		superviseur.acheterParAO(this,this.cryptogramme, Chocolat.C_BQ_E , this.requiredQuantities.get(1));
-		superviseur.acheterParAO(this,this.cryptogramme, Chocolat.C_MQ , this.requiredQuantities.get(2));
-		superviseur.acheterParAO(this,this.cryptogramme, Chocolat.C_MQ_E , this.requiredQuantities.get(3));
-		superviseur.acheterParAO(this,this.cryptogramme, Chocolat.C_HQ_E , this.requiredQuantities.get(4));
-	}
 
+		for (int i=0; i<chocolats.size(); i++){
+			if (requiredQuantities.get(i)>5){
+			superviseur.acheterParAO(this,this.cryptogramme, chocolats.get(i) , this.requiredQuantities.get(i));
+			}
+		}
+	}
+	@Override
 	public List<Variable> getIndicateurs(){
-		List<Variable> indicateurs = new ArrayList<Variable>();
+                @SuppressWarnings("Convert2Diamond")
+		List<Variable> indicateurs = super.getIndicateurs();
 		return(indicateurs);
 	}
-
+	@Override
 	public List<Variable> getParametres(){
+                @SuppressWarnings("Convert2Diamond")
 		List<Variable> parametres = new ArrayList<Variable>();
 		return(parametres);
 	}
-
+	@Override
 	public List<Journal> getJournaux(){
+                @SuppressWarnings("Convert2Diamond")
 		List<Journal> journaux = new ArrayList<Journal>();
 		return(journaux);
 	}
-
+	@Override
 	public List<String> getNomsFilieresProposees(){
+                @SuppressWarnings("Convert2Diamond")
 		List<String> noms = new ArrayList<String>();
 		return(noms);
 	}
 
 	
 }
-

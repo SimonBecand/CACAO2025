@@ -48,5 +48,7 @@ Not accepting because your update makes the simulation too slow. You can read th
 
 Your team repository is not up-to-date with the changes that happened on the main repository. 
 
-1. Pull from the main repository: in the Source Control view in VSCode select `Pull from...` then select the main repository (usually named `upstream`)
-2. Push
+1. If you have not done it yet, add the main repository as a new remote. To do this, in the Source Control view in VSCode select `Remote` -> `Add Remote...`, then paste the URL of the main repository `https://github.com/CACAO2025/CACAO2025.git` and then give it a name (the typical name is `upstream`).
+2. Pull from the main repository. To do this, in the Source Control view in VSCode select `Pull, Push` -> `Pull from...` then select the main repository (usually named `upstream`).
+3. If there are conflicts, resolve all of them as usual in the VSCode editor.
+4. Push.

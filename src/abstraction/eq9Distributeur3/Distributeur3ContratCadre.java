@@ -10,11 +10,12 @@ import abstraction.eqXRomu.produits.IProduit;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Distributeur3ContratCadre extends Distributeur3Distributeur implements IAcheteurContratCadre{
+public class Distributeur3ContratCadre extends Distributeur3Charges implements IAcheteurContratCadre{
 
     @Override
-    // Implémentée par Héloise
+    // Implémentée par Héloise et Jeanne
     public void next() {
+
 
         super.next();
        SuperviseurVentesContratCadre superviseur = (SuperviseurVentesContratCadre) Filiere.LA_FILIERE.getActeur("Sup.CCadre");
@@ -28,8 +29,7 @@ public class Distributeur3ContratCadre extends Distributeur3Distributeur impleme
                listeChcocolatPertinents.add(choco);
            }
        }
-
-
+       
        for (IActeur a : transfo){
            if(a instanceof IVendeurContratCadre && Filiere.LA_FILIERE.getActeursSolvables().contains(a)){
                for(ChocolatDeMarque choco : listeChcocolatPertinents) {
@@ -40,7 +40,6 @@ public class Distributeur3ContratCadre extends Distributeur3Distributeur impleme
                }
            }
        }
-
     }
 
     @Override
@@ -67,24 +66,54 @@ public class Distributeur3ContratCadre extends Distributeur3Distributeur impleme
 
     @Override
     // Implémentée par Héloïse
-    public double contrePropositionPrixAcheteur(ExemplaireContratCadre contrat) {
+    public double contrePropositionPrixAcheteur(ExemplaireContratCadre contrat){
         journalContrats.ajouter("negocie le contrat");
+
+        int prixMoyen=0;
+        if(Filiere.LA_FILIERE.getEtape()==0) {
+            prixMoyen = 200000;
+        }else{
+            prixMoyen = (int) Filiere.LA_FILIERE.prixMoyen((ChocolatDeMarque) contrat.getProduit(), Filiere.LA_FILIERE.getEtape()-1);
+            //System.out.println(" le prix moyen de "+((ChocolatDeMarque) contrat.getProduit()).getNom()+" est : "+prixMoyen);
+        }
+
+        journalContrats.ajouter("proposition équipe en face a "+contrat.getPrix()+" euros");
+
         //double fourchetteLimiteNegociation  = 1500;
 
         // a enlever, on laisse juste ça pour pouvoir négocier avec les autres
-        double fourchetteLimiteNegociation  = 2100;
-        double fourchetteLimiteAchat = 1000;
-        double baisseNego = 0.5; // Correspond a 50% du prix proposé soit une baisse de 50%
+        double fourchetteLimiteAchat;
+        double fourchetteLimiteRenta;
+        double fourchetteLimiteNegociation;
+
+        if(Filiere.LA_FILIERE.getEtape()==0) {
+            fourchetteLimiteNegociation  = prixMoyen;
+            fourchetteLimiteRenta = prixMoyen;
+            fourchetteLimiteAchat = fourchetteLimiteRenta*0.95;
+        }else {
+            fourchetteLimiteNegociation = prixMoyen - (chargesTotal() / getVentesByStep(Filiere.LA_FILIERE.getEtape() - 1)) * 0.3;
+            fourchetteLimiteRenta = prixMoyen - (chargesTotal() / getVentesByStep(Filiere.LA_FILIERE.getEtape() - 1));
+            fourchetteLimiteAchat = fourchetteLimiteRenta * 0.95;
+        }
+        journalContrats.ajouter("prix Moyen : "+prixMoyen);
+        journalContrats.ajouter("fourchette limite nego : "+fourchetteLimiteNegociation);
+        journalContrats.ajouter("fourchette limite de renta "+fourchetteLimiteRenta);
+        journalContrats.ajouter("fourchette limite achat : "+fourchetteLimiteAchat);
+
+
+
         if(contrat.getPrix()<fourchetteLimiteNegociation){
             if(contrat.getPrix()<fourchetteLimiteAchat){
+                journalContrats.ajouter("accepte le contrat");
                 return contrat.getPrix();
             }else{
-                return contrat.getPrix()*baisseNego;
+                journalContrats.ajouter("continue les négociations");
+                return fourchetteLimiteNegociation*0.85;
             }
         }else{
+            journalContrats.ajouter("refus des négociations");
             return -1;
         }
-
     }
 
     @Override
@@ -96,8 +125,26 @@ public class Distributeur3ContratCadre extends Distributeur3Distributeur impleme
 
     @Override
     public void receptionner(IProduit p, double quantiteEnTonnes, ExemplaireContratCadre contrat) {
+        //System.out.println("quantité du chocolat après recepetion : "+p.toString()+" "+this.stockChocoMarque.get(p));
         stockChocoMarque.put((ChocolatDeMarque) p,this.stockChocoMarque.get(p)+quantiteEnTonnes);
         journalActeur.ajouter("reception de "+quantiteEnTonnes+" tonnes de "+p.toString()+" du contrat "+ contrat.toString());
         this.MAJStocks();
-    }
+        //System.out.println("quantité du chocolat après recepetion : "+p.toString()+" "+this.stockChocoMarque.get(p));
+        ChocolatDeMarque choco = (ChocolatDeMarque) p;
+//        if(choco.getChocolat().isEquitable()){
+//            if(Filiere.LA_FILIERE.getEtape()!=0 && Filiere.LA_FILIERE.prixMoyen((ChocolatDeMarque) p,Filiere.LA_FILIERE.getEtape())!=0){
+//                this.prix.put((ChocolatDeMarque) p,(float) (Filiere.LA_FILIERE.prixMoyen((ChocolatDeMarque) p,Filiere.LA_FILIERE.getEtape())*0.97));
+//            }else {
+//                this.prix.put((ChocolatDeMarque) p, 2500.0F);
+//            }
+//        }else{
+//            if(Filiere.LA_FILIERE.getEtape()!=0 && Filiere.LA_FILIERE.prixMoyen((ChocolatDeMarque) p,Filiere.LA_FILIERE.getEtape())!=0){
+//                this.prix.put((ChocolatDeMarque) p,(float) (Filiere.LA_FILIERE.prixMoyen((ChocolatDeMarque) p,Filiere.LA_FILIERE.getEtape())*0.97));
+//            }else {
+//                this.prix.put((ChocolatDeMarque)p, 3000.0F);
+//            }
+//
+//            this.prix.put((ChocolatDeMarque) p,4000.0F);
+        }
+    
 }

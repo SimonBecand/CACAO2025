@@ -16,7 +16,7 @@ public class Transformateur3AO extends Transformateur3AcheteurBourse implements 
         if (stockChoco.contains(produit)){
             double Q = offre.getQuantiteT();
             if(stockChoco.getQuantityOf(produit) > Q){
-                double prix = Q*3;
+                double prix = Q;
                 OffreVente offrevente = new OffreVente(offre, this, produit, prix);
                 return offrevente;
             }

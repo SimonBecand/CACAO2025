@@ -4,7 +4,7 @@ package abstraction.eq4Transformateur1.contratCadre;
 import abstraction.eqXRomu.filiere.*;
 
 import abstraction.eqXRomu.contratsCadres.*;
-import abstraction.eq4Transformateur1.Transformateur1Stocks;
+import abstraction.eq4Transformateur1.Transformateur1Stocks; 
 
 /*
  * @author MURY Julien

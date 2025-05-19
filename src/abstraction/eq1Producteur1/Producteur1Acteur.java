@@ -10,13 +10,19 @@ import abstraction.eqXRomu.general.Journal;
 import abstraction.eqXRomu.general.Variable;
 import abstraction.eqXRomu.produits.Feve;
 import abstraction.eqXRomu.produits.IProduit;
+import abstraction.eq1Producteur1.*;
+
+// ADRIEN BUCHER
 
 public class Producteur1Acteur implements IActeur {
 
     protected int cryptogramme;
 
     protected Journal journal;
-    protected Stock stock;
+    protected Stock stock; 
+
+    
+    // Indicateurs de stock
 
     private Variable stockTotal;
     private Variable stockFMQ;
@@ -24,20 +30,17 @@ public class Producteur1Acteur implements IActeur {
     private Variable stockFHQ;
 
     public Producteur1Acteur() {
-        this.journal = new Journal(getNom() + " Journal", this);
-        this.stock = new Stock();
+        this.journal = new Journal(getNom() + " Journal", this); 
+        this.stock = new Stock(this); // Passe le journal au stock
 
-        // Initialisation du stock
-        stock.ajouter(Feve.F_BQ, 1000); // Fèves basse qualité
-        stock.ajouter(Feve.F_MQ, 1000); // Fèves moyenne qualité
-        stock.ajouter(Feve.F_HQ_E, 1000); // Fèves haute qualité
-
+    
         // Initialisation des indicateurs
         this.stockTotal = new Variable("Stock Total", this, stock.getStockTotal());
         this.stockFMQ = new Variable("Stock FMQ", this, stock.getStock(Feve.F_MQ));
         this.stockFBQ = new Variable("Stock FBQ", this, stock.getStock(Feve.F_BQ));
         this.stockFHQ = new Variable("Stock FHQ", this, stock.getStock(Feve.F_HQ_E));
     }
+
 
     public void initialiser() {
         journal.ajouter("Initialisation du producteur");
@@ -57,8 +60,7 @@ public class Producteur1Acteur implements IActeur {
         int etape = Filiere.LA_FILIERE.getEtape();
         journal.ajouter("Étape " + etape);
 
-        // Ajout de production fictive chaque étape
-        stock.ajouter(Feve.F_BQ, 10); // Production de fèves basse qualité
+        stock.ajouter(Feve.F_BQ, 10); // Production de fèves basse qualité -> ce qu'on doit faire c'est la quantité mettre ce qu'on a pu vendre
         stock.ajouter(Feve.F_MQ, 10); // Production de fèves moyenne qualité
         stock.ajouter(Feve.F_HQ_E, 10); // Production de fèves haute qualité
 
@@ -101,13 +103,6 @@ public class Producteur1Acteur implements IActeur {
     }
 
     @Override
-    public List<Journal> getJournaux() {
-        List<Journal> res = new ArrayList<>();
-        res.add(journal);
-        return res;
-    }
-
-    @Override
     public void setCryptogramme(Integer crypto) {
         this.cryptogramme = crypto;
     }
@@ -143,4 +138,13 @@ public class Producteur1Acteur implements IActeur {
         }
         return 0.0;
     }
+
+    public List<Journal> getJournaux() {
+		List<Journal> res=new ArrayList<Journal>();
+		res.add(journal);
+		return res;
+
+    
+}
+
 }

@@ -21,7 +21,6 @@ import abstraction.eqXRomu.acteurs.Romu;
 
 public class Distributeur2AcheteurContratCadre extends Distributeur2Vendeur implements IAcheteurContratCadre{
 
-	
 	protected List<ExemplaireContratCadre> contrat_en_cours;
 	protected List<ExemplaireContratCadre> contrat_term;
 	protected Journal journalCC;
@@ -29,7 +28,8 @@ public class Distributeur2AcheteurContratCadre extends Distributeur2Vendeur impl
 	// liste des produits que l'on souhaite acheter
     protected List<ChocolatDeMarque> produit_voulue;
 
-	public Distributeur2AcheteurContratCadre() {
+	//@author pebinoh
+    public Distributeur2AcheteurContratCadre() {
 		super();
 		this.contrat_en_cours = new LinkedList<ExemplaireContratCadre>();
 		this.contrat_term = new LinkedList<ExemplaireContratCadre>();
@@ -63,81 +63,83 @@ public class Distributeur2AcheteurContratCadre extends Distributeur2Vendeur impl
     }
 
     // Méthode pour la contre-proposition de l'échéancier
-public Echeancier contrePropositionDeLAcheteur(ExemplaireContratCadre contrat) {
-    Echeancier echeancier = contrat.getEcheancier();
-    IProduit produit = contrat.getProduit();
-    
-    // Vérifier si nous avons besoin urgent du produit
-    if (produit instanceof ChocolatDeMarque) {
-        ChocolatDeMarque choco = (ChocolatDeMarque) produit;
-        double stockActuel = stock_Choco.get(choco);
+    //@author tidzzz
+    public Echeancier contrePropositionDeLAcheteur(ExemplaireContratCadre contrat) {
+        Echeancier echeancier = contrat.getEcheancier();
+        IProduit produit = contrat.getProduit();
         
-        // Si le stock est faible, on accepte l'échéancier tel quel
-        if (stockActuel < 5000) {
-            journalCC.ajouter("Stock faible pour " + choco + ", j'accepte l'échéancier proposé.");
-            return echeancier;
+        // Vérifier si nous avons besoin urgent du produit
+        if (produit instanceof ChocolatDeMarque) {
+            ChocolatDeMarque choco = (ChocolatDeMarque) produit;
+            double stockActuel = stock_Choco.get(choco);
+            
+            // Si le stock est faible, on accepte l'échéancier tel quel
+            if (stockActuel < 5000) {
+                journalCC.ajouter("Stock faible pour " + choco + ", j'accepte l'échéancier proposé.");
+                return echeancier;
+            }
+            
+            // Sinon, on essaie d'étaler les livraisons pour mieux gérer notre stock
+            if (echeancier.getNbEcheances() > 1) {
+                Echeancier contre = new Echeancier(echeancier.getStepDebut(), echeancier.getNbEcheances() + 2, echeancier.getQuantiteTotale() / (echeancier.getNbEcheances() + 2));
+                journalCC.ajouter("Contre-proposition d'échéancier: étalement sur " + contre.getNbEcheances() + " étapes.");
+                return contre;
+            }
         }
         
-        // Sinon, on essaie d'étaler les livraisons pour mieux gérer notre stock
-        if (echeancier.getNbEcheances() > 1) {
-            Echeancier contre = new Echeancier(echeancier.getStepDebut(), echeancier.getNbEcheances() + 2, echeancier.getQuantiteTotale() / (echeancier.getNbEcheances() + 2));
-            journalCC.ajouter("Contre-proposition d'échéancier: étalement sur " + contre.getNbEcheances() + " étapes.");
-            return contre;
-        }
+        journalCC.ajouter("J'accepte l'échéancier proposé pour " + produit);
+        return echeancier;
     }
-    
-    journalCC.ajouter("J'accepte l'échéancier proposé pour " + produit);
-    return echeancier;
-}
 
-// Méthode pour la contre-proposition du prix
-public double contrePropositionPrixAcheteur(ExemplaireContratCadre contrat) {
-    double prixPropose = contrat.getPrix();
-    IProduit produit = contrat.getProduit();
-    
-    if (produit instanceof ChocolatDeMarque) {
-        ChocolatDeMarque choco = (ChocolatDeMarque) produit;
-        double stockActuel = stock_Choco.get(choco);
+    // Méthode pour la contre-proposition du prix
+    //@author tidzzz
+    public double contrePropositionPrixAcheteur(ExemplaireContratCadre contrat) {
+        double prixPropose = contrat.getPrix();
+        IProduit produit = contrat.getProduit();
         
-        // Prix maximum que nous sommes prêts à payer selon le type de chocolat
-        double prixMaximum;
-        if (choco.getChocolat() == Chocolat.C_HQ_BE) {
-            prixMaximum = 27000;
-        } else if (choco.getChocolat() == Chocolat.C_HQ_E) {
-            prixMaximum = 20000;
-        } else if (choco.getChocolat() == Chocolat.C_MQ_E) {
-            prixMaximum = 9000;
-        } else {
-            prixMaximum = 8000;
+        if (produit instanceof ChocolatDeMarque) {
+            ChocolatDeMarque choco = (ChocolatDeMarque) produit;
+            double stockActuel = stock_Choco.get(choco);
+            
+            // Prix maximum que nous sommes prêts à payer selon le type de chocolat
+            double prixMaximum;
+            if (choco.getChocolat() == Chocolat.C_HQ_BE) {
+                prixMaximum = 27000;
+            } else if (choco.getChocolat() == Chocolat.C_HQ_E) {
+                prixMaximum = 20000;
+            } else if (choco.getChocolat() == Chocolat.C_MQ_E) {
+                prixMaximum = 9000;
+            } else {
+                prixMaximum = 8000;
+            }
+            
+            // Si notre stock est très bas, on est prêt à payer plus
+            if (stockActuel < 2000) {
+                prixMaximum *= 1.2; // +20%
+            } else if (stockActuel > 50000) {
+                prixMaximum *= 0.8; // -20%
+            }
+            
+            // Si le prix proposé est trop élevé, on fait une contre-proposition
+            if (prixPropose > prixMaximum) {
+                double contreOffre = prixMaximum * 0.9; // On propose 90% de notre maximum
+                journalCC.ajouter("Prix proposé (" + prixPropose + ") trop élevé pour " + choco + ", je propose " + contreOffre);
+                return contreOffre;
+            }
+            
+            // Si le prix est acceptable, on accepte mais on essaie quand même de négocier un peu
+            if (prixPropose < prixMaximum * 0.8) {
+                journalCC.ajouter("Prix proposé (" + prixPropose + ") acceptable pour " + choco + ", j'accepte");
+                return prixPropose;
+            } else {
+                double contreOffre = prixPropose * 0.95; // On essaie de baisser de 5%
+                journalCC.ajouter("Prix proposé (" + prixPropose + ") pour " + choco + ", je propose " + contreOffre);
+                return contreOffre;
+            }
         }
         
-        // Si notre stock est très bas, on est prêt à payer plus
-        if (stockActuel < 2000) {
-            prixMaximum *= 1.2; // +20%
-        } else if (stockActuel > 50000) {
-            prixMaximum *= 0.8; // -20%
-        }
-        
-        // Si le prix proposé est trop élevé, on fait une contre-proposition
-        if (prixPropose > prixMaximum) {
-            double contreOffre = prixMaximum * 0.9; // On propose 90% de notre maximum
-            journalCC.ajouter("Prix proposé (" + prixPropose + ") trop élevé pour " + choco + ", je propose " + contreOffre);
-            return contreOffre;
-        }
-        
-        // Si le prix est acceptable, on accepte mais on essaie quand même de négocier un peu
-        if (prixPropose < prixMaximum * 0.8) {
-            journalCC.ajouter("Prix proposé (" + prixPropose + ") acceptable pour " + choco + ", j'accepte");
-            return prixPropose;
-        } else {
-            double contreOffre = prixPropose * 0.95; // On essaie de baisser de 5%
-            journalCC.ajouter("Prix proposé (" + prixPropose + ") pour " + choco + ", je propose " + contreOffre);
-            return contreOffre;
-        }
+        return prixPropose;
     }
-    
-    return prixPropose;
-}
 
     //@author ArmandCHANANE
     public void notificationNouveauContratCadre(ExemplaireContratCadre contrat) {
@@ -161,7 +163,7 @@ public double contrePropositionPrixAcheteur(ExemplaireContratCadre contrat) {
     }
 
 
-    //@author tidzzz
+    //@author pebinoh
     public List<Journal> getJournaux() {
 		
 		List<Journal> jour = super.getJournaux();

@@ -24,17 +24,28 @@ public class Transformateur3Acteur implements IActeur {
 	protected Banque LaBanque;
 
 	protected Journal jdb;
+	protected Journal journalProduction;
 	protected Journal journalStock;
 	protected Journal journalTransac;
 	protected Journal journalCC;
 	protected Journal journalBourse;
 	protected Journal journalAO;
+	protected Journal journalStrat;
 
 	protected List<IProduit> lesFeves;
+	protected List<IProduit> fevesUtiles; // Liste des fèves qu'on utilise pour la production de chocolat
 	protected List<IProduit> lesChocolats;
 	protected HashMap<IProduit, Variable> dicoIndicateurFeves;
 	protected Transformateur3Stock stockFeves;
 	protected Transformateur3Stock stockChoco;
+
+	//Stratégie
+
+	// Quantitée de chaque type de fèves reçue au prochain step
+    // pour chaque fève, in dispose d'un échéancier sur la quantité total de fèves
+	//protected HashMap<IProduit, List<Double>> quantityFevesEcheancier;
+    // Quantitée de chaque type de choco vendu au prochain step
+    //protected HashMap<IProduit, List<Double>> quantityChocoEcheancier;
 
 	protected Variable eq6_Q_MQ_0;
 	protected Variable eq6_Q_MQ_1;
@@ -47,16 +58,16 @@ public class Transformateur3Acteur implements IActeur {
 	protected Variable eq6_Q_Arna;
 	protected Variable eq6_Q_Hypo;
 	
-		public Transformateur3Acteur() {
-			// Initialisation des journaux
-			this.jdb = new Journal("Journal de bord", this);
-			this.journalStock = new Journal("Journal des stocks", this);
-			this.journalTransac = new Journal("Journal des transactions", this);
-			this.journalCC = new Journal("Journal des contrats cadre", this);
-			this.journalBourse = new Journal("Journal de la Bourse", this);
-			this.journalAO = new Journal("Journal des appels d'offre", this);
-
-
+	public Transformateur3Acteur() {
+		// Initialisation des journaux
+		this.jdb = new Journal("Journal de bord", this);
+		this.journalProduction = new Journal("Journal de production", this);
+		this.journalStock = new Journal("Journal des stocks", this);
+		this.journalTransac = new Journal("Journal des transactions", this);
+		this.journalCC = new Journal("Journal des contrats cadre", this);
+		this.journalBourse = new Journal("Journal de la Bourse", this);
+		this.journalAO = new Journal("Journal des appels d'offre", this);
+		this.journalStrat = new Journal("Journal - Stratégie", this);
 
 		// Initialisation des indicateurs
 		this.eq6_Q_BQ_0 = new Variable(this.getNom()+": quantité de cacao de BQ non labellisé", this, 0);
@@ -89,6 +100,13 @@ public class Transformateur3Acteur implements IActeur {
 		for (Feve f : Feve.values()) {
 			this.lesFeves.add(f);
 		}
+
+		this.fevesUtiles = new ArrayList<IProduit>();
+        this.fevesUtiles.add(Feve.F_BQ);
+        this.fevesUtiles.add(Feve.F_BQ_E);
+        this.fevesUtiles.add(Feve.F_MQ);   
+        this.fevesUtiles.add(Feve.F_HQ_E);
+
 		//Création du stock de fèves
 		stockFeves = new Transformateur3Stock(this, journalStock, "fèves", 300.0, lesFeves, dicoIndicateurFeves);
 	}

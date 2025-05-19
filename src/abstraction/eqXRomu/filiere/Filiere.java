@@ -7,14 +7,22 @@ import java.util.List;
 import java.util.Random;
 
 import abstraction.eqXRomu.clients.ClientFinal;
+import abstraction.eqXRomu.contratsCadres.ContratCadre;
 import abstraction.eqXRomu.general.Journal;
 import abstraction.eqXRomu.general.Variable;
 import abstraction.eqXRomu.produits.ChocolatDeMarque;
+import abstraction.eqXRomu.produits.Feve;
+import abstraction.eqXRomu.produits.IProduit;
 import presentation.FenetrePrincipale;
 
 import java.awt.Color;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 
 /**
  * Classe modelisant une filiere vue comme un regroupement d'acteurs, 
@@ -32,7 +40,6 @@ public class Filiere implements IAssermente {
 
 	public static Filiere LA_FILIERE; // Filiere.LA_FILIERE reference l'unique instance de Filiere
 	public static double SEUIL_EN_TETE_DE_GONDOLE_POUR_IMPACT = 0.05; // Si les produits d'une marque m representent au moins 5% de la quantite totale en tete de gondole alors il y a un impact positif sur l'attrait de la marque.
-
 
 	private int etape;                   // Le numero d'etape en cours
 	private Banque laBanque;             // L'unique banque. Tous les acteurs ont un compte a cette banque
@@ -52,6 +59,7 @@ public class Filiere implements IAssermente {
 	private List<ChocolatDeMarque> chocolatsProduits; // La liste de tous les types de chocolat de marque produits.
 	private HashMap<ChocolatDeMarque, List<IFabricantChocolatDeMarque>> fabricantsChocolatDeMarque; // Associe a chaque chocolat de marque la liste des acteurs qui le produise 
 	private HashMap<String, Double> qualiteMoyenneMarque; // Associe a une marque la qualite moyenne des produits portant cette marque
+	private List<Echange> echanges; // Historique des echanges 
 
 	// Influence des tetes de gondole sur la notoriete des marques
 	private List<String> presenceEnTG; // A chaque step, si les produits d'une marque representent au moins 5% des quantites mis 
@@ -85,6 +93,7 @@ public class Filiere implements IAssermente {
 		this.fabricantsChocolatDeMarque = new HashMap<ChocolatDeMarque, List<IFabricantChocolatDeMarque>>();
 		this.qualiteMoyenneMarque = new HashMap<String, Double>();
 		this.presenceEnTG = new LinkedList<String>();
+		this.echanges = new ArrayList<Echange>();
 		this.nbPresencesEnTg = new HashMap<String, Integer>();
 		this.ajouterActeur(this.laBanque);
 	}
@@ -478,6 +487,7 @@ public class Filiere implements IAssermente {
 				}
 			}
 		}
+		echangesToCSV();
 		this.incEtape();
 	}
 
@@ -534,6 +544,46 @@ public class Filiere implements IAssermente {
 		return clientsFinaux.get(0).getVentes(etape, choco);
 	}
 
+	/***********************************************************************/
+	/**       METHODES ACCESSIBLE QU'AUX ASSERMENTE (superviseurs)        **/
+	/***********************************************************************/
+	public void ajouterEchange(IActeur acteurAssermente, int cryptogramme,IActeur acteur,IProduit produit, double volume, String typeEchange) {
+		if (acteur==null) {
+			erreur(" Appel de ajouterEchange de Filiere avec null pour acteur");
+		}  else if (acteurAssermente==null) {
+			erreur(" Appel de ajouterEchange de Filiere avec null pour acteur assermente");
+		}  else if (produit==null) {
+			erreur(" Appel de ajouterEchange de Filiere avec null pour produit");
+		}  else if (this.cryptos.get(acteurAssermente)!=cryptogramme) {
+			erreur(" Appel de ajouterEchange de Filiere avec un cryptogramme qui n'est pas celui de l'acteur acredite");
+		} else if (!(acteurAssermente instanceof IAssermente)) {
+			System.err.println(" Appel de ajouterEchange de Filiere par un acteur non assermente");
+			Filiere.LA_FILIERE.getBanque().faireFaillite(acteur, this, cryptogramme);
+		}  else  {
+			this.echanges.add(new Echange(this.etape, acteur, produit, volume, typeEchange));
+		} 
+	}
+	public void echangesToCSV() {
+		//	Variable aff = Filiere.LA_FILIERE.getIndicateur("BourseCacao Aff.Graph");
+		if (getIndicateur("BourseCacao Aff.Graph.").getValeur()!=0.0) {
+
+
+			try {
+				PrintWriter aEcrire= new PrintWriter(new BufferedWriter(new FileWriter("docs"+File.separator+"Echanges.csv")));
+				aEcrire.println("ETAPE;ACTEUR;PRODUIT;VOLUME");
+				for (Echange ec : this.echanges) {						
+					aEcrire.println( ec.toCSV() );
+					//							System.out.println(s);
+				}
+				aEcrire.close();
+			}
+			catch (IOException e) {
+				throw new Error("Une operation sur les fichiers a leve l'exception "+e) ;
+			}
+		}	
+	}
+
+		
 	/***********************************************************************/
 	/**                METHODES INTERNES (non accessibles)                **/
 	/***********************************************************************/
@@ -612,5 +662,38 @@ public class Filiere implements IAssermente {
 
 	public void setCryptos(HashMap<IActeur, Integer> cryptos) {
 		this.cryptos = cryptos;
+	}
+
+}
+class Echange {
+	private int step;
+	private IActeur acteur;
+	private IProduit produit;
+	private double volume;
+	private String typeEchange;
+	public Echange(int step, IActeur acteur, IProduit produit, double volume, String typeEchange) {
+		this.step = step;
+		this.acteur = acteur;
+		this.produit = produit;
+		this.volume = volume;	
+		this.typeEchange = typeEchange;	
+	}
+	public int getStep() {
+		return step;
+	}
+	public IActeur getActeur() {
+		return acteur;
+	}
+	public IProduit getProduit() {
+		return produit;
+	}
+	public double getVolume() {
+		return volume;
+	}
+	public String getTypeEchange() {
+		return typeEchange;
+	}
+	public String toCSV() {
+		return step + ";" + acteur.getNom() + ";" + produit + ";" + volume+";" + typeEchange;
 	}
 }

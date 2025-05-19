@@ -10,77 +10,122 @@ import abstraction.eqXRomu.produits.IProduit;
 
 public class Producteur1ContratCadre extends Producteur1Acteur implements IVendeurContratCadre {
 
-    private Producteur1 vendeur; // Référence au Producteur1 principal
+    private Producteur1 vendeur;
     private List<ExemplaireContratCadre> contrats;
+    private Journal journal;
 
     public Producteur1ContratCadre() {
-        super();
-        this.stock = new Stock();
+        this.journal = new Journal(getNom() + " - Journal Contrat Cadre", this);
         this.contrats = new ArrayList<>();
-
-        // Initialisation des stocks pour chaque type de fève
-        stock.ajouter(Feve.F_BQ, 100000);
-        stock.ajouter(Feve.F_MQ, 100000);
-        stock.ajouter(Feve.F_HQ_BE, 100000);
     }
 
     @Override
     public boolean vend(IProduit produit) {
-        return produit instanceof Feve;
+        return false;//produit instanceof Feve;
     }
 
     @Override
     public Echeancier contrePropositionDuVendeur(ExemplaireContratCadre contrat) {
         IProduit produit = contrat.getProduit();
-        Echeancier echeancierPropose = contrat.getEcheancier();
-        
+return null;   /* 
+        if (!(produit instanceof Feve)) {
+            journal.ajouter("Erreur : Produit non reconnu pour la contre-proposition.");
+            return null;
+        }
 
-        double stockDispo = stock.getStockTotal();
+        Feve feve = (Feve) produit;
+        Echeancier echeancierPropose = contrat.getEcheancier();
+        double stockDispo = stock.getStock(feve);
         double quantiteMax = 0.25 * stockDispo;
 
-        if (echeancierPropose.getQuantiteTotale() > quantiteMax) {
-            Echeancier contreProp = new Echeancier(echeancierPropose.getStepDebut());
-            for (int step = echeancierPropose.getStepDebut(); step <= echeancierPropose.getStepFin(); step++) {
-                double q = echeancierPropose.getQuantite(step);
-                if (Math.min(q, quantiteMax / echeancierPropose.getNbEcheances())<0) {
-                    System.out.println("Aie aie aie eq1 contreporposition vendeur cc");
-                    return null;
-                }
-                contreProp.ajouter(Math.min(q, quantiteMax / echeancierPropose.getNbEcheances()));
-            }
-            return contreProp;
+        double masseTotale = echeancierPropose.getQuantiteTotale();
+        int duree = echeancierPropose.getStepFin() - echeancierPropose.getStepDebut() + 1;
+
+        if (masseTotale < 100 || duree < 1) {
+            journal.ajouter("Refus de l'échéancier : masse totale < 100T ou durée < 1");
+            return null;
         }
-        return echeancierPropose;
+
+        double quantiteMinParStep = masseTotale / (10.0 * duree);
+
+        if (masseTotale > quantiteMax) {
+            double nouvelleMasse = quantiteMax;
+            double quantiteParStep = Math.max(nouvelleMasse / duree, quantiteMinParStep);
+
+            try {
+                Echeancier contreProp = new Echeancier(echeancierPropose.getStepDebut(), duree, quantiteParStep);
+                for (int i = 1; i < duree; i++) {
+                    contreProp.ajouter(quantiteParStep);
+                }
+                journal.ajouter("Contre-proposition envoyée : " + contreProp);
+                return contreProp;
+            } catch (IllegalArgumentException e) {
+                journal.ajouter("Erreur à la création de l’échéancier : " + e.getMessage());
+                return null;
+            }
+        }
+
+        for (int step = echeancierPropose.getStepDebut(); step <= echeancierPropose.getStepFin(); step++) {
+            if (echeancierPropose.getQuantite(step) < quantiteMinParStep) {
+                journal.ajouter("Refus : quantité trop faible à l'étape " + step);
+                return null;
+            }
+        }
+
+        journal.ajouter("Échéancier proposé accepté : " + echeancierPropose);
+        return echeancierPropose; // */
     }
 
     @Override
     public double propositionPrix(ExemplaireContratCadre contrat) {
         IProduit produit = contrat.getProduit();
 
-        if (produit.equals(Feve.F_BQ)) return 1.2;
-        if (produit.equals(Feve.F_MQ)) return 1.8;
-        if (produit.equals(Feve.F_HQ_BE)) return 2.5;
+        if (produit.equals(Feve.F_BQ)) return 1200;
+        if (produit.equals(Feve.F_MQ)) return 1800;
+        if (produit.equals(Feve.F_HQ_BE)) return 2500;
 
         return 1.0;
     }
 
     @Override
     public double contrePropositionPrixVendeur(ExemplaireContratCadre contrat) {
-        return propositionPrix(contrat);
+        double prixPropose = contrat.getPrix();
+        double contreProposition = prixPropose * 1.10;
+        journal.ajouter("Contre-proposition de prix : " + contreProposition + " (initialement " + prixPropose + ")");
+        return contreProposition;
     }
 
     @Override
-public void notificationNouveauContratCadre(ExemplaireContratCadre contrat) {
-    this.contrats.add(contrat);
-    journal.ajouter("Nouveau contrat cadre accepté : " + contrat);
-}
+    public void notificationNouveauContratCadre(ExemplaireContratCadre contrat) {
+        this.contrats.add(contrat);
+        journal.ajouter("Nouveau contrat cadre accepté : " + contrat);
+    }
 
     @Override
     public double livrer(IProduit produit, double quantite, ExemplaireContratCadre contrat) {
-        double quantiteLivree = Math.min(quantite, stock.getStockTotal());
-        stock.retirer(produit, quantiteLivree);
-        journal.ajouter("Livraison de " + quantiteLivree + " de " + produit + " pour le contrat " + contrat);
-        return quantiteLivree;
+        double quantiteEnStock = stock.getStock((Feve) produit);
+        double quantiteLivree = Math.min(quantite, quantiteEnStock);
+
+        if (quantiteLivree <= 0) {
+            journal.ajouter("Échec de livraison : stock vide pour " + produit);
+            return 0.0;
+        }
+
+        boolean retraitOk = stock.retirer(produit, quantiteLivree);
+
+        if (retraitOk) {
+            journal.ajouter("Livraison de " + quantiteLivree + " de " + produit + " pour le contrat " + contrat);
+            return quantiteLivree;
+        } else {
+            journal.ajouter("Erreur de retrait lors de la livraison de " + produit);
+            return 0.0;
+        }
     }
-}
-    
+
+    @Override
+    public List<Journal> getJournaux() {
+        List<Journal> res = super.getJournaux();
+        res.add(journal);
+        return res;
+    }
+} 
