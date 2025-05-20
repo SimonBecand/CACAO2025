@@ -24,23 +24,20 @@ public class Transformateur3Fabriquant extends Transformateur3Marques implements
 
     //Gestion de la production de chocolat
     private double nbOuvrier = 85400;
-    private double nbMachine = 128;
+    //private double nbMachine = 128;
     
-    private double capacite_machine = 1e3;//1e7*1e-4; // tablette/step
+    //private double capacite_machine = 1e3;//1e7*1e-4; // tablette/step
     //private double capacite_ouvrier = 15000; // tab/step
 
     private double coutIngredient = 450.0; // €/tonnes
     private double salaireOuvrier = 4500.0; // €
     
-    private double coutTotalProd = 0;
+    protected double coutTotalProd = 0;
     private double quantiteTotaleProduite = 0;
 
     //Production maximale : 128 000 T x2 = 256 000 T
-    protected double productionMax = nbMachine*capacite_machine*1.3; // 166 000 T
-
-    //Demande de production
-    protected HashMap<IProduit, Double> DemandeProdChoco; //Demande pour chaque choco en tonnes
-
+    //nbMachine*capacite_machine*1.3; // 166 000 T
+    protected double productionMax = super.productionMaxStrat;
 
     public Transformateur3Fabriquant(){
         super();
@@ -62,6 +59,12 @@ public class Transformateur3Fabriquant extends Transformateur3Marques implements
         super.lesChocolats.add(bollo);
         super.lesChocolats.add(arna);
         super.lesChocolats.add(hypo);
+
+        //Remplissage de prixChoco
+        for(IProduit choco : super.lesChocolats){
+            List<Double> Prix = new ArrayList<Double>();
+            super.prixChoco.put(choco, Prix);
+            }
         
         //Dico indicateur choco
 		this.dicoIndicateurChoco = new HashMap<IProduit, Variable>();
@@ -71,14 +74,9 @@ public class Transformateur3Fabriquant extends Transformateur3Marques implements
         this.dicoIndicateurChoco.put(bollo,super.eq6_Q_Bollo);
 
         //Création du stock de chocolat
-		super.stockChoco = new Transformateur3Stock(this, super.journalStock, "chocolat", 10000.0, super.lesChocolats, this.dicoIndicateurChoco);
+		super.stockChoco = new Transformateur3Stock(this, super.journalStock, "chocolat", 25000.0, super.lesChocolats, this.dicoIndicateurChoco);
     
-        //Initialisation de la demande
-        this.DemandeProdChoco = new HashMap<IProduit, Double>();
-        this.DemandeProdChoco.put(fraud,productionMax/3);
-        this.DemandeProdChoco.put(hypo,productionMax/6);
-        this.DemandeProdChoco.put(arna,productionMax/6);
-        this.DemandeProdChoco.put(bollo,productionMax/3);
+
     }
 
     public void initialiser(){
