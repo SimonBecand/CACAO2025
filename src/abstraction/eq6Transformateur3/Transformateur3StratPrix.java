@@ -1,154 +1,121 @@
-// @author  Florian Malveau
-
 package abstraction.eq6Transformateur3;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import abstraction.eqXRomu.filiere.Filiere;
+import abstraction.eqXRomu.produits.Chocolat;
+import abstraction.eqXRomu.produits.ChocolatDeMarque;
+import abstraction.eqXRomu.produits.Feve;
 import abstraction.eqXRomu.produits.IProduit;
-import abstraction.eqXRomu.contratsCadres.Echeancier;
-import abstraction.eqXRomu.contratsCadres.ExemplaireContratCadre;
-import abstraction.eqXRomu.general.Journal;
 
-public class Transformateur3StratPrix extends Transformateur3AO {
-
-    protected HashMap<IProduit, Double> coutMoyFeves; //estimation du cout de chaque fèves
-    protected List<Long> contratTraite;
-
-    // Quantitée de chaque type de fèves reçue au prochain step
-    // pour chaque fève, on dispose d'un échéancier sur la quantité total de fèves
-	//protected HashMap<IProduit, List<Double>> quantityFevesEcheancier;
-    // Quantitée de chaque type de choco vendu au prochain step
-    //protected HashMap<IProduit, List<Double>> quantityChocoEcheancier;
-
+// @author Henri Roth
+public class Transformateur3StratPrix {
+    
+    protected ChocolatDeMarque fraud;
+    protected ChocolatDeMarque hypo;
+    protected ChocolatDeMarque arna;
+    protected ChocolatDeMarque bollo;
     public Transformateur3StratPrix(){
-        //Initialisation des échanciers de fèves et chocolats
-        super.quantityFevesEcheancier = new HashMap<IProduit, List<Double>>();
-        super.quantityChocoEcheancier = new HashMap<IProduit, List<Double>>();
-        this.contratTraite = new ArrayList<Long>();
+        this.fraud = new ChocolatDeMarque(Chocolat.C_BQ, "Fraudolat", 30);
+        this.hypo = new ChocolatDeMarque(Chocolat.C_HQ_E, "Hypocritolat", 100);
+        this.arna =  new ChocolatDeMarque(Chocolat.C_MQ, "Arnaquolat", 50);
+        this.bollo = new ChocolatDeMarque(Chocolat.C_BQ_E, "Bollorolat", 30);
     }
 
-    public void initialiser() {
-        super.initialiser();
-        
-        // Initialisation des échéanciers de fèves et chocolats
-        for(IProduit feve : super.lesFeves){
-            super.quantityFevesEcheancier.put(feve, new ArrayList<Double>());
-            super.quantityFevesEcheancier.get(feve).add(0.0);
-            super.quantityFevesEcheancier.get(feve).add(0.0);
-            super.quantityFevesEcheancier.get(feve).add(0.0);
-            super.quantityFevesEcheancier.get(feve).add(0.0);
-        }
-        for(IProduit choco : super.lesChocolats){
-            super.quantityChocoEcheancier.put(choco, new ArrayList<Double>());
-            super.quantityChocoEcheancier.get(choco).add(0.0);
-            super.quantityChocoEcheancier.get(choco).add(0.0);
-            super.quantityChocoEcheancier.get(choco).add(0.0);
-            super.quantityChocoEcheancier.get(choco).add(0.0);
-        }
-    }
-
-    public void next(){
-		super.next();
-		super.jdb.ajouter("NEXT - STRATPRIX");
-        super.journalStrat.ajouter("NEXT - STRATPRIX");
-
-        miseAJourEcheanciers();
-
-        // Traitement nouveaux contrats pour actualiser les échéanciers de fèves et chocolats
-        super.quantityFevesEcheancier = traiterContrat(super.ContratsAcheteur, super.quantityFevesEcheancier);
-        super.quantityChocoEcheancier = traiterContrat(super.ContratsVendeur, super.quantityChocoEcheancier);
-
-        // Affichage des échéanciers de fèves et chocolats
-        displayEcheancier("Echéancier de fèves", super.quantityFevesEcheancier, super.fevesUtiles);
-        displayEcheancier("Echéancier de chocolats", super.quantityChocoEcheancier, super.lesChocolats);
-
-
-
-        }
-
-    public void miseAJourEcheanciers(){
-        //On supprime la ligne du next actuel
-        for(IProduit feve : super.lesFeves){
-            super.quantityFevesEcheancier.get(feve).remove(0);
-            if(super.quantityFevesEcheancier.get(feve).size() <= 2){
-                super.quantityFevesEcheancier.get(feve).add(0.0);
-            }
-        }
-        for(IProduit choco : super.lesChocolats){
-            super.quantityChocoEcheancier.get(choco).remove(0);
-            if(super.quantityChocoEcheancier.get(choco).size() <= 2){
-                super.quantityChocoEcheancier.get(choco).add(0.0);
-            }
-        }
-    }
-
-    public HashMap<IProduit, List<Double>> traiterContrat(List<ExemplaireContratCadre> contratsList, HashMap<IProduit, List<Double>> EcheancierParProduit) {
-        
-        for(ExemplaireContratCadre contrat : contratsList){
-            // On traite le contrat s'il n'a pas déjà été traité
-            if(!this.contratTraite.contains(contrat.getNumero())){
-
-                this.contratTraite.add(contrat.getNumero());
-                //super.journalStrat.ajouter("----- Traitement du contrat " + contrat.getNumero()+" -----");
-                // On ajoute la quantité de fèves reçue au stock
-                IProduit prod = contrat.getProduit();
-                Echeancier echeancier = contrat.getEcheancier();
-                //super.journalStrat.ajouter("Produit : " + prod.toString());
-                //super.journalStrat.ajouter("Echéancier : " + echeancier.toString());
-                for (int i = 1; i <= echeancier.getNbEcheances(); i++) {
-                    // Si la liste d'échéance n'est pas assez grande, on l'agrandi
-                    double quantite = echeancier.getQuantite(echeancier.getStepDebut()); // Quantité de fèves reçue
-                    if(EcheancierParProduit.get(prod).size() <= i){
-                        EcheancierParProduit.get(prod).add(quantite);
-                    }else{
-                        quantite += EcheancierParProduit.get(prod).get(i);
-                        EcheancierParProduit.get(prod).set(i, quantite);
-                    }
+    /**
+     * Methode appelée par l'acteur pour calculer le prix d'achat d'une fève en question.
+     * Tout d'abord, on calcule en fonction de l'historique de vente,
+     * en prenant les cinq premiers prix les plus
+     * intéressants pour nous et on en fait une moyenne puis on compare avec le prix de la bourse.
+     * On prend le meilleur des deux avec une petite réduction si c'est pour émettre un contrat cadre.
+     * @param prixFeve
+     * @param feve
+     * @return Retourne une estimation du prix à la tonne auquel on pourrait acheter la fève en question
+     */
+    public double PrixFeve(HashMap<IProduit, List<Double>> prixFeve, Feve feve){
+        List<Double> prix = prixFeve.get(feve);
+        Integer longueur = prix.size();
+        Integer step_actuel = Filiere.LA_FILIERE.getEtape();
+        double meilleurs_prix_histo = 0;
+        // On évite les erreurs dans les premiers step, en prenant en compte que les premières ventes
+        // et ensuite on prend en compte les 5 dernières ventes quand l'étape actuelle dépasse 5
+        if(longueur != 0){
+            if(longueur > 5){
+                for(int i = 0; i < 5; i++){
+                    
+                    meilleurs_prix_histo += prix.get(longueur - i - 1);
                 }
+                meilleurs_prix_histo = meilleurs_prix_histo/5;
+            }
+            else{
+                for(int i = 0; i < step_actuel; i++){
+                    meilleurs_prix_histo += prix.get(longueur - i - 1);
+                }
+                meilleurs_prix_histo = meilleurs_prix_histo/step_actuel;
             }
         }
-        return EcheancierParProduit;
-
+        if(meilleurs_prix_histo == 0){
+            if(feve.equals(Feve.F_BQ)){
+                return 3000;
+            } else if(feve.equals(Feve.F_BQ_E)){
+                return 3500;
+            } else if(feve.equals(Feve.F_MQ)){
+                return 3500;
+            }else if(feve.equals(Feve.F_MQ_E)){
+                return 4000;
+            } else if(feve.equals(Feve.F_HQ_E)){
+                return 4500;
+            }
+        }
+        return meilleurs_prix_histo;
     }
-
-    public void displayEcheancier(String title, HashMap<IProduit, List<Double>>Echeancier, List<IProduit> prodList){
-
-        super.journalStrat.ajouter("");
-        super.journalStrat.ajouter(title);
-        super.journalStrat.ajouter(".................... | .Step +0. | .Step +1.   | .Step +2. |");
-        for(IProduit prod : prodList){
-
-            String prodName = miseEnForme(prod.toString(), 20, true);
-            String str1 = miseEnForme(Journal.doubleSur(Echeancier.get(prod).get(0).intValue(),1),9, false);
-            String str2 = miseEnForme(Journal.doubleSur(Echeancier.get(prod).get(1).intValue(),1),9, false);
-            String str3 = miseEnForme(Journal.doubleSur(Echeancier.get(prod).get(2).intValue(),1),9, false);
-			this.journalStrat.ajouter(prodName+" | "+str1+" | "+str2+" | "+str3+" |");
-            //this.journalStrat.ajouter(Journal.doubleSur(123456789.124, 0));
-        
+    /**
+     * Méthode appelé par l'acteur pour avoir une estimation du prix à la tonne du chocolat en question,
+     * on calcule uniquement avec l'historique des ventes
+     * @param prixChoco
+     * @param Choco
+     * @param PrixProd
+     * @param CapaProd
+     * @return Retourne une estimation du prix à la tonne de choco
+     */
+    public double PrixChoco(HashMap<IProduit, List<Double>> prixChoco, IProduit Choco, Double CapaProd){
+        List<Double> prix = prixChoco.get(Choco);
+        Integer longueur = prix.size();
+        Integer step_actuel = Filiere.LA_FILIERE.getEtape();
+        double meilleurs_prix_histo = 0;
+        // On évite les erreurs dans les premiers step, en prenant en compte que les premières ventes
+        // et ensuite on prend en compte les 5 dernières ventes quand l'étape actuelle dépasse 5
+        if(longueur != 0){
+            if(longueur > 5){
+                for(int i = 0; i < 5; i++){
+                    
+                    meilleurs_prix_histo += prix.get(longueur - i - 1);
+                }
+                meilleurs_prix_histo = meilleurs_prix_histo/5;
+            }
+            else{
+                for(int i = 0; i < longueur; i++){
+                    meilleurs_prix_histo += prix.get(i);
+                }
+                meilleurs_prix_histo = meilleurs_prix_histo/step_actuel;
+            }
         }
-    }
-
-    public String miseEnForme(String str, int size, Boolean left){
-        int nbspace = size-str.length();
-        String space = "";
-        for(int i=0;i<nbspace;i++){
-            space=space+".";
+        if(meilleurs_prix_histo == 0){
+            Double prixinit = 0.0;
+            if(Choco.equals(fraud)){
+                prixinit = 10000.0;
+            } else if(Choco.equals(bollo)){
+                prixinit = 10500.0;
+            } else if(Choco.equals(arna)){
+                prixinit = 11000.0;
+            }else if(Choco.equals(hypo)){
+                prixinit = 12000.0;
+            }
+            return prixinit;
         }
-        if(left){
-            return str+space;
-        }
-        else{
-            return space+str;
-        }
-    }
+        return meilleurs_prix_histo;
 
-    //Estimation prix fèves
-
-    //Estimation production
-
-    //Estimation stock
-
+    //public double contrePropal(){}
 }
-   
+}

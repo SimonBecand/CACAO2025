@@ -19,6 +19,9 @@ public class Transformateur3 extends Transformateur3AO{
 	public void next(){
 		super.next();
 		super.jdb.ajouter("NEXT - TRANSFORMATEUR3");
+
+		super.actualiserEcheanciers();
+		super.displayAllStratQuantityData();
 		//stockChoco.addToStock(super.lesChocolats.get(0), 500.0);
 		//stockChoco.addToStock(lesChocolats.get(1), 800.0);
 
@@ -49,7 +52,6 @@ public class Transformateur3 extends Transformateur3AO{
 		res.add(super.jdb);
 		res.add(super.journalProduction);
 		res.add(super.journalStock);
-		res.add(super.journalTransac);
 		res.add(super.journalCC);
 		res.add(super.journalBourse);
 		res.add(super.journalAO);
