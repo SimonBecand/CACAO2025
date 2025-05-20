@@ -111,11 +111,11 @@ class ContratCadreAcheteur extends ContratCadreVendeur implements IAcheteurContr
 	public double contrePropositionPrixAcheteur(ExemplaireContratCadre contrat){
         Double prixVendeur= contrat.getPrix();
 		Feve f = (Feve) contrat.getProduit();
-		if (prixVendeur <= 5000){  
+		if (prixVendeur <= 4000){  
 			return prixVendeur;
 		}
 		else{
-			return (5000*0.8 +0.2*prixVendeur);
+			return (4000*0.8 +0.2*prixVendeur);
 		}
     }
 

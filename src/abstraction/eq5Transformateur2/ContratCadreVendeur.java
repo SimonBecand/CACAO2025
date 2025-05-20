@@ -4,16 +4,28 @@ package abstraction.eq5Transformateur2;
 
 import abstraction.eqXRomu.contratsCadres.Echeancier;
 import abstraction.eqXRomu.contratsCadres.ExemplaireContratCadre;
+import abstraction.eqXRomu.contratsCadres.IAcheteurContratCadre;
 import abstraction.eqXRomu.contratsCadres.IVendeurContratCadre;
+import abstraction.eqXRomu.contratsCadres.SuperviseurVentesContratCadre;
+import abstraction.eqXRomu.filiere.Filiere;
+import abstraction.eqXRomu.filiere.IActeur;
 import abstraction.eqXRomu.produits.Chocolat;
 import abstraction.eqXRomu.produits.IProduit;
-
-
+import java.util.ArrayList;
+import java.util.List;
 
 public class ContratCadreVendeur extends DecisionsActeur implements IVendeurContratCadre{
-    public ContratCadreVendeur() {
-    	super();
-    }
+	protected List<ExemplaireContratCadre> ContratsVendeur = new ArrayList<>(); // Liste des contrats cadres en cours
+	protected List<IProduit> chocolatsProduits = new ArrayList<>(); // Liste des produits (chocolats) proposés
+
+	public ContratCadreVendeur() {
+		super();
+		// Initialisation des chocolats produits (à adapter selon vos besoins)
+		chocolatsProduits.add(Chocolat.C_HQ_BE);
+		chocolatsProduits.add(Chocolat.C_HQ_E);
+		chocolatsProduits.add(Chocolat.C_MQ);
+		chocolatsProduits.add(Chocolat.C_MQ_E);
+	}
 
     /**
 	 * Methode appelee par le superviseur afin de savoir si l'acheteur
@@ -21,8 +33,42 @@ public class ContratCadreVendeur extends DecisionsActeur implements IVendeurCont
 	 * @param produit
 	 * @return Retourne false si le vendeur ne souhaite pas etablir de contrat 
 	 * a cette etape pour ce type de produit (retourne true si il est pret a
-	 * negocier un contrat cadre pour ce type de produit).
+		for(IProduit cm : this.chocolatsProduits){
 	 */
+
+	 public void next(){
+        this.next();
+        //on regarde ce qu'on doit livrer au step suivant
+		for(IProduit cm : this.chocolatsProduits){
+			double livraison = 0;
+			for (ExemplaireContratCadre contrat : ContratsVendeur){ 
+			if (contrat.getProduit()==cm){
+				livraison += contrat.getQuantiteALivrerAuStep();
+			}
+			}
+		}
+        SuperviseurVentesContratCadre CCvendeur = (SuperviseurVentesContratCadre) Filiere.LA_FILIERE.getActeur("CCvendeur");
+        for(IProduit cm : this.chocolatsProduits){
+            for (IActeur acteur : Filiere.LA_FILIERE.getActeurs()) {
+                if (acteur!=this && acteur instanceof IAcheteurContratCadre && ((IAcheteurContratCadre)acteur).achete(cm)) {
+                    
+                        double capacite_vente_max = 500;
+                            CCvendeur.demandeVendeur((IAcheteurContratCadre)acteur, (IVendeurContratCadre)this,(IProduit) cm, new Echeancier(Filiere.LA_FILIERE.getEtape()+1, 20, capacite_vente_max), super.cryptogramme, true);
+                            CCvendeur.demandeVendeur((IAcheteurContratCadre)acteur, (IVendeurContratCadre)this,(IProduit) cm, new Echeancier(Filiere.LA_FILIERE.getEtape()+1, 20, capacite_vente_max), super.cryptogramme, false);
+							//this.journalContrat.ajouter("Demande de contrat cadre envoyee pour " + cm + " a " + acteur.getNom() + " avec une capacite de vente de " + capacite_vente_max);
+							// On enregistre le contrat dans la liste des contrats en cours
+							//ExemplaireContratCadre contrat = CCvendeur.getContratCadre((IAcheteurContratCadre)acteur, (IVendeurContratCadre)this,(IProduit) cm);
+							//if (contrat != null) {
+								//ContratsVendeur.add(contrat);
+								//this.journalContrat .ajouter("Contrat cadre en cours pour " + cm + " avec " + acteur.getNom());
+							//} else {
+								//this.journalContrat.ajouter("Aucun contrat cadre en cours pour " + cm + " avec " + acteur.getNom());
+							}
+                    } 
+                }
+            }
+        
+    
 
 	public boolean vend(IProduit produit){
             if (produit == Chocolat.C_HQ_BE){
@@ -57,7 +103,7 @@ public class ContratCadreVendeur extends DecisionsActeur implements IVendeurCont
 		int stepDebut = e.getStepDebut();
 		double quantite = e.getQuantite(stepDebut); 
 
-return null;
+		return e;
     }
 	
 	/**
@@ -68,7 +114,7 @@ return null;
 	 */
 	public double propositionPrix(ExemplaireContratCadre contrat){
         Chocolat c = (Chocolat) contrat.getProduit();
-		return super.prixVente(c);
+		return 2000;
     }
 
 	/**
@@ -83,7 +129,7 @@ return null;
 	 */
 	public double contrePropositionPrixVendeur(ExemplaireContratCadre contrat){
         Chocolat c = (Chocolat) contrat.getProduit();
-		double prixSouhaite = prixVente(c);
+		double prixSouhaite = 2000;
 		double prix = contrat.getPrix();
 		if (prix >= 0.99*prixSouhaite){
 			return prix;
@@ -113,6 +159,7 @@ return null;
 	 * @return Retourne la quantite livree. Une penalite est prevue si cette quantite
 	 *  est inferieure a celle precisee en parametre
 	 */
+	
 	public double livrer(IProduit produit, double quantite, ExemplaireContratCadre contrat){
 		this.retirerStock(this, produit, quantite, super.cryptogramme);
 		return quantite;
