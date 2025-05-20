@@ -8,8 +8,13 @@ import abstraction.eqXRomu.produits.Feve;
 import abstraction.eqXRomu.produits.IProduit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 class ContratCadreAcheteur extends ContratCadreVendeur implements IAcheteurContratCadre{
+	private Map<Echeancier, Double> echeancierPrix = new HashMap<>();
+	private List<ExemplaireContratCadre> contrats = new ArrayList<>();
+
     public ContratCadreAcheteur() {
         super();
     }
@@ -130,9 +135,24 @@ class ContratCadreAcheteur extends ContratCadreVendeur implements IAcheteurContr
 	 * @param contrat
 	 */
 	public void notificationNouveauContratCadre(ExemplaireContratCadre contrat){
+		Echeancier original = contrat.getEcheancier();
+
 		super.journalContrat.ajouter("nouveau contrat cadre signé"+contrat.toString());
-    
+
+    	echeancierPrix.put(contrat.getEcheancier(), contrat.getPrix()); // Ensure price is stored at contract signature
+    	contrats.add(contrat); // store the contract for later lookup
+
     }
+
+	public Double getDernierPrixPourFeve(Feve f) {
+    Double prix = null;
+    for (ExemplaireContratCadre contrat : contrats) {
+    	if (contrat.getProduit() == f) {
+        	prix = contrat.getPrix();
+    	}
+	}
+    return prix;
+}
 
 	/**
 	 * Methode appelee par le SuperviseurVentesContratCadre afin de notifier

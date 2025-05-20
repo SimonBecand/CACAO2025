@@ -20,6 +20,7 @@ public class DecisionsActeur extends ProcessChoco{
     
     private HashMap<Feve, Double> proportion; // proportion de chaque chocolat dans la production totale
     private double objectifChangementProportion;
+    private ContratCadreAcheteur acheteur;
     
 
     public DecisionsActeur(){
@@ -98,10 +99,18 @@ public class DecisionsActeur extends ProcessChoco{
         Feve f=correspondFeve(c);
         double coutProduction=0;
 
+        Double prixFeve = null;
+        if (acheteur != null) {
+            prixFeve = acheteur.getDernierPrixPourFeve(f); // You need to implement this method
+        }
+        if (prixFeve == null) {
+            prixFeve = 3000.0; // fallback if no contract price is found
+        }
+
         
         coutProduction+=super.getFraisAditionnel()/this.getProductionTotale();
         coutProduction+=super.getSalaireTotal()/this.getProductionTotale();
-        coutProduction+=3000;   // pour l'instant on base le prix de la tonne de fève sur le prix de la bourse en moyenne
+        coutProduction+=prixFeve;   // pour l'instant on base le prix de la tonne de fève sur le prix de la bourse en moyenne
         coutProduction+=super.coutIngredientSecondaire;
         coutProduction+=super.getcoutAditionnelParTablette()*10000; // *10000 pour passer de tonne à unité de tablette de chocolat
         
