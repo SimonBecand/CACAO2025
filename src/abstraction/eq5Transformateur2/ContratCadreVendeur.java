@@ -37,7 +37,7 @@ public class ContratCadreVendeur extends DecisionsActeur implements IVendeurCont
 	 */
 
 	 public void next(){
-        this.next();
+        super.next();
         //on regarde ce qu'on doit livrer au step suivant
 		for(IProduit cm : this.chocolatsProduits){
 			double livraison = 0;
